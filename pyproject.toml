@@ -12,3 +12,8 @@ dependencies = [
     "typer>=0.24.1",
     "watchdog>=6.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.19.0",
+]
