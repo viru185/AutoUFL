@@ -5,7 +5,7 @@ Excel to CSV transformation logic.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 import re
 from typing import Dict, Iterable
@@ -39,6 +39,9 @@ class ExcelProcessor:
     ) -> None:
         self.sheet_name = sheet_name
         self.tag_mapping = tag_mapping or TAG_MAPPING
+        self._normalized_tag_mapping = {
+            self._clean_text(name): tag for name, tag in self.tag_mapping.items()
+        }
         self._warned_descriptions: set[str] = set()
 
     def process_file(self, file_path: Path, output_dir: Path) -> ProcessResult:
@@ -55,7 +58,7 @@ class ExcelProcessor:
             raise ProcessingError("No data rows were produced after normalization.")
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"{file_path.stem}.csv"
+        output_path = self._unique_output_path(output_dir / f"{file_path.stem}.csv")
         logger.info(f"Writing normalized CSV to '{output_path}'")
         try:
             normalized.to_csv(output_path, index=False)
@@ -160,15 +163,57 @@ class ExcelProcessor:
             raise ProcessingError(message)
         return normalized["description"], normalized["uom"]
 
+    @classmethod
+    def _normalize_headers(cls, columns: Iterable[object]) -> list[str]:
+        return [cls._normalize_single_header(col) for col in columns]
+
+    @classmethod
+    def _normalize_single_header(cls, value: object) -> str:
+        dt_candidate = cls._coerce_header_datetime(value)
+        if dt_candidate:
+            return dt_candidate.strftime("%b-%y")
+
+        text = cls._clean_text(value)
+        if not text:
+            return ""
+
+        dt_from_text = cls._parse_header_text_to_datetime(text)
+        if dt_from_text:
+            return dt_from_text.strftime("%b-%y")
+
+        return text
+
     @staticmethod
-    def _normalize_headers(columns: Iterable[object]) -> list[str]:
-        normalized_headers: list[str] = []
-        for col in columns:
-            text = "" if col is None else str(col)
-            text = text.replace("–", "-").replace("—", "-")
-            text = " ".join(text.strip().split())
-            normalized_headers.append(text)
-        return normalized_headers
+    def _coerce_header_datetime(value: object) -> datetime | None:
+        if isinstance(value, pd.Timestamp):
+            dt_value = value.to_pydatetime()
+        elif isinstance(value, datetime):
+            dt_value = value
+        elif isinstance(value, date):
+            dt_value = datetime.combine(value, datetime.min.time())
+        else:
+            return None
+        return dt_value.replace(day=1)
+
+    @staticmethod
+    def _parse_header_text_to_datetime(text: str) -> datetime | None:
+        cleaned = text.replace("–", "-").replace("—", "-")
+        for fmt in MONTH_FORMATS:
+            try:
+                return datetime.strptime(cleaned, fmt).replace(day=1)
+            except ValueError:
+                continue
+
+        if any(sep in cleaned for sep in ("-", "/", " ")):
+            try:
+                parsed = pd.to_datetime(cleaned, errors="raise")
+            except Exception:
+                return None
+            if isinstance(parsed, pd.Timestamp):
+                parsed = parsed.to_pydatetime()
+            if isinstance(parsed, datetime):
+                return parsed.replace(day=1)
+        return None
 
     def _promote_header_row_if_needed(self, df: pd.DataFrame) -> pd.DataFrame:
         normalized_columns = self._normalize_headers(df.columns)
@@ -261,13 +306,14 @@ class ExcelProcessor:
         return combined.drop(columns=["MonthDate"], errors="ignore")
 
     def _map_description_to_tag(self, description: str) -> str | None:
-        tag = self.tag_mapping.get(description)
+        normalized_description = self._clean_text(description)
+        tag = self._normalized_tag_mapping.get(normalized_description)
         if tag:
             return tag
 
-        if description and description not in self._warned_descriptions:
-            logger.warning(f"No PI tag mapping for description '{description}'.")
-            self._warned_descriptions.add(description)
+        if normalized_description and normalized_description not in self._warned_descriptions:
+            logger.warning(f"No PI tag mapping for description '{normalized_description}'.")
+            self._warned_descriptions.add(normalized_description)
         return None
 
     @staticmethod
@@ -292,3 +338,14 @@ class ExcelProcessor:
     @staticmethod
     def _looks_like_month_label(label: str) -> bool:
         return bool(MONTH_CANDIDATE_PATTERN.match(label.lower()))
+
+    @staticmethod
+    def _unique_output_path(path: Path) -> Path:
+        candidate = path
+        counter = 1
+        while candidate.exists():
+            candidate = path.with_name(f"{path.stem}_{counter}{path.suffix}")
+            counter += 1
+        if candidate != path:
+            logger.info(f"Output file exists, using '{candidate.name}' instead")
+        return candidate
