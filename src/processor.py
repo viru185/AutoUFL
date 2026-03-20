@@ -7,6 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
+import math
+import numbers
 import re
 from typing import Dict, Iterable
 
@@ -328,6 +330,18 @@ class ExcelProcessor:
     def _clean_value(value: object) -> str:
         if value is None or (isinstance(value, float) and pd.isna(value)):
             return ""
+        if isinstance(value, str):
+            return value.strip()
+        if isinstance(value, numbers.Integral):
+            return str(int(value))
+        if isinstance(value, numbers.Real):
+            if pd.isna(value):
+                return ""
+            rounded = round(value)
+            if math.isclose(value, rounded, rel_tol=0, abs_tol=1e-9):
+                return str(int(rounded))
+            formatted = f"{value:.6f}".rstrip("0").rstrip(".")
+            return formatted or "0"
         text = str(value).strip()
         return text
 
