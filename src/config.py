@@ -9,8 +9,13 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Root folder of the repository; handy for building other default paths.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Load .env ahead of reading os.getenv values.
+load_dotenv(PROJECT_ROOT / ".env")
 
 # Logging --------------------------------------------------------------------
 LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
