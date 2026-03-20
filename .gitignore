@@ -11,3 +11,6 @@ wheels/
 
 # Demo Folder
 data/
+
+# ignore env file
+.env
