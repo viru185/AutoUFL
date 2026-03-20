@@ -1,73 +1,45 @@
-# config related to Logging
-LOG_LEVEL = "DEBUG"
-LOG_TO_FILE = True
-LOG_TO_CONSOL = False
+"""
+Application configuration constants and helpers.
 
-# To watch the folder for new file.
-WATCH_FOLDER = None
+Values can be overridden via environment variables to keep the code flexible.
+"""
 
-# This is to map the description to tags.
-TAG_MAPPING = {
-    "Alumina Produced, T": "HIL_ALU_RKT_REF_UTILT_MNL_ALU_PROD",
-    "Alumina Calcined, T": "HIL_ALU_RKT_REF_UTILT_MNL_ALU_CALCN",
-    "Vanadium Sludge, T": "HIL_ALU_RKT_REF_UTILT_MNL_VAND_SLDG",
-    "Recovery Factor": "HIL_ALU_RKT_REF_UTILT_MNL_RECVRY_FACTR",
-    "Month days": "HIL_ALU_RKT_REF_UTILT_MNL_MNTH_DAYS",
-    "Flowcuts/Process Upsets": "HIL_ALU_RKT_REF_UTILT_MNL_FLCUTS_OR_PROCESS_UPSETS",
-    "Short Shutdowns": "HIL_ALU_RKT_REF_UTILT_MNL_SHORT_SHUTDOWNS",
-    "Annual Shut down": "HIL_ALU_RKT_REF_UTILT_MNL_ANNUAL_SHUT_DOWN",
-    "No. of operation days": "HIL_ALU_RKT_REF_UTILT_MNL_NUM_OF_OP_DAYS",
-    "Plant Availability factor%": "HIL_ALU_RKT_REF_UTILT_MNL_PLNT_AVAIL_FACTR",
-    "Steam – T/T": "HIL_ALU_RKT_REF_UTILT_MNL_STM",
-    "Power  - KWH/T": "HIL_ALU_RKT_REF_UTILT_MNL_PWR",
-    "Fuel Oil – Kg/T": "HIL_ALU_RKT_REF_UTILT_MNL_FUEL_OIL",
-    "Bauxite (As is)  - T/T (theoretical)": "HIL_ALU_RKT_REF_UTILT_MNL_BAUX_AS_IS_THEOR",
-    "Bauxite (As is)  - T/T": "HIL_ALU_RKT_REF_UTILT_MNL_BAUX_AS_IS",
-    "Caustic Soda  – T/T": "HIL_ALU_RKT_REF_UTILT_MNL_CAUS_SODA",
-    "Lime  - T/T": "HIL_ALU_RKT_REF_UTILT_MNL_LIME",
-    "C.G.M.  - g/T": "HIL_ALU_RKT_REF_UTILT_MNL_CGM",
-    "Scale guard -gm/T": "HIL_ALU_RKT_REF_UTILT_MNL_SCALE_GUARD",
-    "Antifoam-g/T": "HIL_ALU_RKT_REF_UTILT_MNL_ANTIFOAM",
-    "Nalco-85700 ,Hydrate floc-gm/T": "HIL_ALU_RKT_REF_UTILT_MNL_NALCO_85700_AND_HYD_FLOC",
-    "HRD Flocculant – g/T": "HIL_ALU_RKT_REF_UTILT_MNL_HRD_FLOC",
-    "PD Floc-g/T": "HIL_ALU_RKT_REF_UTILT_MNL_PD_FLOC",
-    "DCW -g/T": "HIL_ALU_RKT_REF_UTILT_MNL_DCW",
-    "Washer Flocculant – g/T": "HIL_ALU_RKT_REF_UTILT_MNL_WSH_FLOC",
-    "Defoamer – g/T": "HIL_ALU_RKT_REF_UTILT_MNL_DEFOAMER",
-    "Max HT-g/T": "HIL_ALU_RKT_REF_UTILT_MNL_MAX_HTR",
-    "Filter Cloth (Kelly) - Mt./T": "HIL_ALU_RKT_REF_UTILT_MNL_FLTR_CLTH_KELLY",
-    "Filter Cloth (Diastar) - Mt./T": "HIL_ALU_RKT_REF_UTILT_MNL_FLTR_CLTH_DIASTR",
-    "Water (T/T)": "HIL_ALU_RKT_REF_UTILT_MNL_WTR",
-    "O'All TAA %": "HIL_ALU_RKT_REF_UTILT_MNL_O_ALL_TAA_PERCENT",
-    "O'All SiO2  %": "HIL_ALU_RKT_REF_UTILT_MNL_O_ALL_SIO2_PERCENT",
-    "O'All Moist. %": "HIL_ALU_RKT_REF_UTILT_MNL_O_ALL_MOIST_PERCENT",
-    "Ex. Eff": "HIL_ALU_RKT_REF_UTILT_MNL_EXT_EFFICENCY",
-    "Yeild": "HIL_ALU_RKT_REF_UTILT_MNL_YEILD",
-    "Red Mud Generation": "HIL_ALU_RKT_REF_UTILT_MNL_RED_MUD_GEN",
-    "Red Mud Utilization": "HIL_ALU_RKT_REF_UTILT_MNL_RED_MUD_UTILZ",
-    "Overall Recovery": "HIL_ALU_RKT_REF_UTILT_MNL_OVER_RECVRY",
-    "THA": "HIL_ALU_RKT_REF_UTILT_MNL_THA",
-    "MHA": "HIL_ALU_RKT_REF_UTILT_MNL_MHA",
-    "Chemical Extraction": "HIL_ALU_RKT_REF_UTILT_MNL_CHEM_EXTRCT",
-    "Operating Efficiency (Production Basis) - (Production/Design)": "HIL_ALU_RKT_REF_UTILT_MNL_OP_EFFICENCY_PROD_BASIS_MINUS_PROD_UPON_DESIGN",
-    "Bauxite Factor without handling loss": "HIL_ALU_RKT_REF_UTILT_MNL_BAUX_FACTOR_WITHOUT_HANDLE_LOSS",
-    "Bauxite Handling Loss": "HIL_ALU_RKT_REF_UTILT_MNL_BAUX_HANDLE_LOSS",
-    "Soda in Liquor to RDA": "HIL_ALU_RKT_REF_UTILT_MNL_SODA_IN_LIQ_TO_RDA",
-    "Caustic Soda Loss in Liquor with Residue": "HIL_ALU_RKT_REF_UTILT_MNL_CAUS_SODA_LOSS_IN_LIQ_WITH_RESIDUE",
-    "Caustic Soda Loss with Alumina": "HIL_ALU_RKT_REF_UTILT_MNL_CAUS_SODA_LOSS_WITH_ALU",
-    "Caustic Soda Loss with Vanadium": "HIL_ALU_RKT_REF_UTILT_MNL_CAUS_SODA_LOSS_WITH_VAND",
-    "Caustic Soda Loss (Others)": "HIL_ALU_RKT_REF_UTILT_MNL_CAUS_SODA_LOSS_OTHER",
-    "Power Consumption - Hydrate": "HIL_ALU_RKT_REF_UTILT_MNL_PWR_CONS_HYD",
-    "Power Consumption - Calcination": "HIL_ALU_RKT_REF_UTILT_MNL_PWR_CONS_CALCN",
-    "Energy Consumption - Hydrate": "HIL_ALU_RKT_REF_UTILT_MNL_ENRGY_CONS_HYD",
-    "Energy Consumption - Calcination": "HIL_ALU_RKT_REF_UTILT_MNL_ENRGY_CONS_CALCN",
-    "Total Energy Consumption": "HIL_ALU_RKT_REF_UTILT_MNL_TOT_ENRGY_CONS",
-    "Digestion Feed (Caustic) Flow": "HIL_ALU_RKT_REF_UTILT_MNL_DIG_FD_CAUS_FL",
-    "Digestion Feed Caustic Concentration": "HIL_ALU_RKT_REF_UTILT_MNL_DIG_FD_CAUS_CONC",
-    "Digestion Feed A/C": "HIL_ALU_RKT_REF_UTILT_MNL_DIG_FD_ACC",
-    "Blow Off A/C": "HIL_ALU_RKT_REF_UTILT_MNL_BL_OFF_ACC",
-    "PGL Flow": "HIL_ALU_RKT_REF_UTILT_MNL_PGL_FL",
-    "PGL Caustic Concentration": "HIL_ALU_RKT_REF_UTILT_MNL_PGL_CAUS_CONC",
-    "PGL A/C": "HIL_ALU_RKT_REF_UTILT_MNL_PGL_ACC",
-    "Spent Liquor A/C": "HIL_ALU_RKT_REF_UTILT_MNL_SPT_LIQ_ACC",
-}
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+# Root folder of the repository; handy for building other default paths.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Logging --------------------------------------------------------------------
+LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "DEBUG")
+LOG_TO_CONSOLE = os.getenv("AUTO_UFL_LOG_CONSOLE", "true").lower() == "true"
+LOG_PATH = os.getenv("AUTO_UFL_LOG_PATH")  # Optional log file
+
+# Data processing -------------------------------------------------------------
+SHEET_NAME = os.getenv("AUTO_UFL_SHEET_NAME", "P&B")
+
+DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "data" / "incoming"))
+DEFAULT_OUTPUT_FOLDER = Path(os.getenv("AUTO_UFL_OUTPUT_DIR", PROJECT_ROOT / "data" / "normalized"))
+
+SUPPORTED_EXTENSIONS = (".xls", ".xlsx", ".xlsm")
+
+ARCHIVE_SUFFIX_SUCCESS = "_done"
+ARCHIVE_SUFFIX_ERROR = "_error"
+
+ISO_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
+# Month labels seen in the workbook (Apr-25, Mar-2026, etc.)
+MONTH_FORMATS = (
+    "%b-%y",
+    "%b-%Y",
+    "%b %y",
+    "%b %Y",
+    "%B-%y",
+    "%B-%Y",
+)
+
+# Watchdog -------------------------------------------------------------------
+WATCH_POLLING_INTERVAL = float(os.getenv("AUTO_UFL_WATCH_INTERVAL", "1.0"))
+WATCH_STABILIZATION_SECONDS = float(os.getenv("AUTO_UFL_FILE_STABILIZE", "1.0"))

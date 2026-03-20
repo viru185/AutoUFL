@@ -1,22 +1,40 @@
+"""
+Centralized loguru configuration.
+"""
+
+from __future__ import annotations
+
 import sys
+from pathlib import Path
 
 from loguru import logger
 
-from src.config import LOG_LEVEL, LOG_TO_CONSOL
+from src.config import LOG_LEVEL, LOG_PATH, LOG_TO_CONSOLE
 
 
-def init_loguru() -> None:
-
-    # Remove the default logger
+def configure_logger() -> None:
     logger.remove()
 
-    # Add consol logger if LOG_TO_CONSOL is True
-    if LOG_TO_CONSOL:
+    if LOG_TO_CONSOLE:
         logger.add(
             sys.stdout,
             level=LOG_LEVEL,
             colorize=True,
+            enqueue=True,
+        )
+
+    if LOG_PATH:
+        log_file = Path(LOG_PATH)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        logger.add(
+            log_file,
+            level=LOG_LEVEL,
+            enqueue=True,
+            rotation="5 MB",
+            retention=5,
         )
 
 
-init_loguru()
+configure_logger()
+
+__all__ = ["logger"]
