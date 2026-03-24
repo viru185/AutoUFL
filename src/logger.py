@@ -31,7 +31,7 @@ def configure_logger() -> None:
             level=LOG_LEVEL,
             enqueue=True,
             rotation="5 MB",
-            retention=5,
+            retention=0,
         )
 
 
