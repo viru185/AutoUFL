@@ -152,7 +152,8 @@ class ExcelProcessor:
 
         melted = self._duplicate_march_rows(melted)
 
-        ordered = melted[["Tag", "DateTime", "Description", "Value", "UOM"]]
+        ordered = melted[["Tag", "DateTime", "Description", "Value", "UOM"]].copy()
+        ordered["Description"] = ordered["Description"].str.replace(",", " ", regex=False)
         return ordered.reset_index(drop=True)
 
     def _validate_structure(self, df: pd.DataFrame) -> tuple[str, str]:

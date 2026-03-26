@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import sys
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import typer
 from dotenv import load_dotenv
 
-from src.config import DEFAULT_INPUT_FOLDER, DEFAULT_OUTPUT_FOLDER, SUPPORTED_EXTENSIONS
+from src.config import ARCHIVE_SUFFIX_SUCCESS, DEFAULT_INPUT_FOLDER, DEFAULT_OUTPUT_FOLDER, SUPPORTED_EXTENSIONS
 from src.logger import logger
 from src.processor import ExcelProcessor, ProcessingError
-from src.watcher import FolderWatcher
+from src.watcher import FolderWatcher, rename_with_suffix
 
 app = typer.Typer(
     add_completion=False,
@@ -75,6 +76,9 @@ def cli(  # noqa: D401
         return
 
     if file:
+        if _is_marked_done(file):
+            logger.info(f"Skipping '{file}' because it is already marked as processed.")
+            raise typer.Exit(code=0)
         if folder is not None:
             raise typer.BadParameter("--folder can only be used with --auto mode.")
         _run_file_mode(
@@ -158,11 +162,7 @@ def _run_default_batch(processor: ExcelProcessor) -> None:
 
     try:
         try:
-            files = sorted(
-                path
-                for path in input_dir.iterdir()
-                if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
-            )
+            files = sorted(path for path in input_dir.iterdir() if _should_process_input_file(path))
         except OSError:
             logger.exception(f"Unable to scan input folder '{input_dir}'")
             return
@@ -180,12 +180,28 @@ def _run_default_batch(processor: ExcelProcessor) -> None:
             except Exception:  # noqa: BLE001
                 logger.exception(f"Unexpected error while processing '{path.name}'")
                 continue
-            logger.info(
-                f"Finished '{path.name}' -> {result.output_file.name} ({result.rows_written} rows)"
-            )
+            logger.info(f"Finished '{path.name}' -> {result.output_file.name} ({result.rows_written} rows)")
+            rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS, timestamp=datetime.now())
         logger.info("Auto UFL batch run completed.")
     finally:
         logger.remove(log_sink_id)
+
+
+def _should_process_input_file(path: Path) -> bool:
+    if not path.is_file():
+        logger.info(f"Skipping '{path.name}' because file is not valid.")
+        return False
+    if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
+        logger.info(f"Skipping '{path.name}' because file extension is not supported.")
+        return False
+    if _is_marked_done(path):
+        logger.info(f"Skipping '{path.name}' because it is already marked as processed.")
+        return False
+    return True
+
+
+def _is_marked_done(path: Path) -> bool:
+    return ARCHIVE_SUFFIX_SUCCESS in path.stem
 
 
 def _resolve_base_directory() -> Path:

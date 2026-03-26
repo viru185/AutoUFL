@@ -5,6 +5,7 @@ Watchdog-powered folder monitoring.
 from __future__ import annotations
 
 import time
+from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
@@ -81,7 +82,7 @@ class _ExcelEventHandler(FileSystemEventHandler):
             if self.delete_source:
                 path.unlink(missing_ok=True)
             else:
-                rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS)
+                rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS, timestamp=datetime.now())
         except ProcessingError:
             logger.exception(f"Processing failed for '{path}'")
             rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
@@ -152,12 +153,21 @@ class FolderWatcher:
             observer.join()
 
 
-def rename_with_suffix(path: Path, suffix: str) -> Path:
-    new_name = f"{path.stem}{suffix}{path.suffix}"
-    candidate = path.with_name(new_name)
+def rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
+    base_stem = path.stem
+    composed = None
+    if timestamp and suffix == ARCHIVE_SUFFIX_SUCCESS:
+        stamp = timestamp.strftime("%Y-%m-%d_%H-%M-%S")
+        if base_stem.endswith(suffix):
+            base_stem = base_stem[: -len(suffix)]
+        composed = f"{base_stem}_{stamp}{suffix}"
+    if composed is None:
+        composed = f"{base_stem}{suffix}"
+
+    candidate = path.with_name(f"{composed}{path.suffix}")
     counter = 1
     while candidate.exists():
-        candidate = path.with_name(f"{path.stem}{suffix}_{counter}{path.suffix}")
+        candidate = path.with_name(f"{composed}_{counter}{path.suffix}")
         counter += 1
 
     logger.info(f"Renaming file '{path.name}' to suffix '{suffix}'")
