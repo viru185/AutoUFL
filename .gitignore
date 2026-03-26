@@ -14,3 +14,6 @@ data/
 
 # ignore env file
 .env
+
+# Ignore log file
+*.log
