@@ -148,7 +148,7 @@ class ExcelProcessor:
             return melted
 
         melted["MonthDate"] = melted["Month"].map(month_columns.get)
-        melted["DateTime"] = melted["MonthDate"].map(lambda dt: dt.strftime(ISO_TIMESTAMP_FORMAT))
+        melted["DateTime"] = melted["MonthDate"].map(lambda dt: dt.replaace(hour=5, minute=0, second=0).strftime(ISO_TIMESTAMP_FORMAT))
 
         melted = self._duplicate_march_rows(melted)
 
