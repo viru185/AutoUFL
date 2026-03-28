@@ -334,7 +334,7 @@ class ExcelProcessor:
         if isinstance(value, numbers.Integral):
             return str(int(value))
         if isinstance(value, numbers.Real):
-            if pd.isna(value):
+            if pd.isna(value): # type: ignore
                 return ""
             rounded = round(value)
             if math.isclose(value, rounded, rel_tol=0, abs_tol=1e-9):
