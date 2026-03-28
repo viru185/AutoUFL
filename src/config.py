@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 
 # Logging --------------------------------------------------------------------
-LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "DEBUG")
+LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
 LOG_TO_CONSOLE = os.getenv("AUTO_UFL_LOG_CONSOLE", "true").lower() == "true"
 LOG_PATH = os.getenv("AUTO_UFL_LOG_PATH")  # Optional log file
 
