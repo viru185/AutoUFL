@@ -1,28 +1,30 @@
 from __future__ import annotations
 
-from functools import cache
-from pathlib import Path
-import tomllib
+from importlib import metadata
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-
-@cache
-def _project_table() -> dict:
-    pyproject = PROJECT_ROOT / "pyproject.toml"
-    with pyproject.open("rb") as handle:
-        data = tomllib.load(handle)
-    return data.get("project", {})
+PACKAGE_NAME = "autoufl"
+_FALLBACK_VERSION = "1.0.0"
+_AUTHOR = {
+    "name": "Viren Hirpara",
+    "email": "viren@virenhirpara.com",
+}
+_URLS = {
+    "Portfolio": "https://www.virenhirpara.com",
+    "GitHub": "https://github.com/viru185",
+    "LinkedIn": "https://www.linkedin.com/in/hirparaviren/",
+}
 
 
 def get_version() -> str:
-    return _project_table().get("version", "0.0.0")
+    try:
+        return metadata.version(PACKAGE_NAME)
+    except metadata.PackageNotFoundError:
+        return _FALLBACK_VERSION
 
 
 def get_author_record() -> dict:
-    authors = _project_table().get("authors", [])
-    return authors[0] if authors else {}
+    return _AUTHOR.copy()
 
 
 def get_project_urls() -> dict:
-    return _project_table().get("urls", {})
+    return _URLS.copy()
