@@ -249,7 +249,7 @@ def _print_author_metadata() -> None:
 
 def _print_version() -> None:
     name = typer.style("AutoUFL", fg="cyan", bold=True)
-    version = typer.style(get_version(), fg="green", bold=True)
+    version = typer.style(f"V{get_version()}", fg="green", bold=True)
     typer.echo(f"{name} {version}", color=True)
 
 
