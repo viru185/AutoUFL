@@ -4,12 +4,12 @@ Excel to CSV transformation logic.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date, datetime
-from pathlib import Path
 import math
 import numbers
 import re
+from dataclasses import dataclass
+from datetime import date, datetime
+from pathlib import Path
 from typing import Dict, Iterable
 
 import pandas as pd
@@ -41,9 +41,7 @@ class ExcelProcessor:
     ) -> None:
         self.sheet_name = sheet_name
         self.tag_mapping = tag_mapping or TAG_MAPPING
-        self._normalized_tag_mapping = {
-            self._clean_text(name): tag for name, tag in self.tag_mapping.items()
-        }
+        self._normalized_tag_mapping = {self._clean_text(name): tag for name, tag in self.tag_mapping.items()}
         self._warned_descriptions: set[str] = set()
 
     def process_file(self, file_path: Path, output_dir: Path) -> ProcessResult:
@@ -137,9 +135,7 @@ class ExcelProcessor:
 
         logger.info("Mapping tags")
         melted["Tag"] = melted["Description"].map(self._map_description_to_tag)
-        missing_tags = sorted(
-            {desc for desc in melted.loc[melted["Tag"].isna(), "Description"] if desc}
-        )
+        missing_tags = sorted({desc for desc in melted.loc[melted["Tag"].isna(), "Description"] if desc})
         if missing_tags:
             logger.debug(f"Unmapped descriptions: {missing_tags}")
         melted = melted.dropna(subset=["Tag"])
@@ -148,7 +144,9 @@ class ExcelProcessor:
             return melted
 
         melted["MonthDate"] = melted["Month"].map(month_columns.get)
-        melted["DateTime"] = melted["MonthDate"].map(lambda dt: dt.replaace(hour=5, minute=0, second=0).strftime(ISO_TIMESTAMP_FORMAT))
+        melted["DateTime"] = melted["MonthDate"].map(
+            lambda dt: dt.replace(hour=5, minute=0, second=0).strftime(ISO_TIMESTAMP_FORMAT)
+        )
 
         melted = self._duplicate_march_rows(melted)
 
