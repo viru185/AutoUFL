@@ -83,7 +83,7 @@ def cli(  # noqa: D401
         return
 
     if version:
-        typer.echo(get_version())
+        _print_version()
         raise typer.Exit(code=0)
     if author:
         _print_author_metadata()
@@ -239,10 +239,24 @@ def _is_marked_done(path: Path) -> bool:
 def _print_author_metadata() -> None:
     author = get_author_record()
     urls = get_project_urls()
-    typer.echo(f"Name: {author.get('name', 'N/A')}")
-    typer.echo(f"Portfolio: {urls.get('Portfolio', 'N/A')}")
-    typer.echo(f"GitHub: {urls.get('GitHub', 'N/A')}")
-    typer.echo(f"LinkedIn: {urls.get('LinkedIn', 'N/A')}")
+    header = typer.style("Author", fg="cyan", bold=True)
+    typer.echo(header, color=True)
+    _echo_metadata_line("Name", author.get("name", "N/A"))
+    _echo_metadata_line("Portfolio", urls.get("Portfolio", "N/A"))
+    _echo_metadata_line("GitHub", urls.get("GitHub", "N/A"))
+    _echo_metadata_line("LinkedIn", urls.get("LinkedIn", "N/A"))
+
+
+def _print_version() -> None:
+    name = typer.style("AutoUFL", fg="cyan", bold=True)
+    version = typer.style(get_version(), fg="green", bold=True)
+    typer.echo(f"{name} {version}", color=True)
+
+
+def _echo_metadata_line(label: str, value: str) -> None:
+    styled_label = typer.style(f"{label}:", bold=True, fg="magenta")
+    styled_value = typer.style(value, fg="yellow")
+    typer.echo(f"  {styled_label} {styled_value}", color=True)
 
 
 def _resolve_base_directory() -> Path:
