@@ -42,9 +42,9 @@ class _ExcelEventHandler(FileSystemEventHandler):
 
     def on_moved(self, event: FileSystemEvent) -> None:
         if getattr(event, "dest_path", None):
-            event_src = Path(event.dest_path)
+            event_src = Path(str(event.dest_path))
         else:
-            event_src = Path(event.src_path)
+            event_src = Path(str(event.src_path))
         self._process_path(event_src)
 
     def process_existing_files(self, folder: Path) -> None:
@@ -56,7 +56,7 @@ class _ExcelEventHandler(FileSystemEventHandler):
     def _handle_event(self, event: FileSystemEvent) -> None:
         if event.is_directory:
             return
-        self._process_path(Path(event.src_path))
+        self._process_path(Path(str(event.src_path)))
 
     def _process_path(self, path: Path) -> None:
         if not self._is_supported(path):
