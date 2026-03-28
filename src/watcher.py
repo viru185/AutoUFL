@@ -1,7 +1,3 @@
-"""
-Watchdog-powered folder monitoring.
-"""
-
 from __future__ import annotations
 
 import time
@@ -20,6 +16,7 @@ from src.config import (
     WATCH_STABILIZATION_SECONDS,
 )
 from src.processor import ExcelProcessor, ProcessingError
+from src.runtime import processed_timestamp
 
 
 class _ExcelEventHandler(FileSystemEventHandler):
@@ -41,10 +38,7 @@ class _ExcelEventHandler(FileSystemEventHandler):
         self._handle_event(event)
 
     def on_moved(self, event: FileSystemEvent) -> None:
-        if getattr(event, "dest_path", None):
-            event_src = Path(str(event.dest_path))
-        else:
-            event_src = Path(str(event.src_path))
+        event_src = Path(getattr(event, "dest_path", event.src_path))
         self._process_path(event_src)
 
     def process_existing_files(self, folder: Path) -> None:
@@ -56,7 +50,7 @@ class _ExcelEventHandler(FileSystemEventHandler):
     def _handle_event(self, event: FileSystemEvent) -> None:
         if event.is_directory:
             return
-        self._process_path(Path(str(event.src_path)))
+        self._process_path(Path(event.src_path))
 
     def _process_path(self, path: Path) -> None:
         if not self._is_supported(path):
@@ -82,7 +76,7 @@ class _ExcelEventHandler(FileSystemEventHandler):
             if self.delete_source:
                 path.unlink(missing_ok=True)
             else:
-                rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS, timestamp=datetime.now())
+                rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS)
         except ProcessingError:
             logger.exception(f"Processing failed for '{path}'")
             rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
@@ -155,9 +149,10 @@ class FolderWatcher:
 
 def rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
     base_stem = path.stem
+    stamp_source = timestamp or processed_timestamp()
     composed = None
-    if timestamp and suffix == ARCHIVE_SUFFIX_SUCCESS:
-        stamp = timestamp.strftime("%Y-%m-%d_%H-%M-%S")
+    if suffix == ARCHIVE_SUFFIX_SUCCESS:
+        stamp = stamp_source.strftime("%Y-%m-%d_%H-%M-%S")
         if base_stem.endswith(suffix):
             base_stem = base_stem[: -len(suffix)]
         composed = f"{base_stem}_{stamp}{suffix}"

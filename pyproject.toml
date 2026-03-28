@@ -1,9 +1,20 @@
 [project]
-name = "autoufl"
-version = "0.1.0"
-description = "Add your description here"
+name = "autoUFL"
+version = "1.0.0"
+description = "Batch Excel-to-CSV normalization utility for UFL uploads"
 readme = "README.md"
 requires-python = ">=3.13"
+authors = [
+    { name = "Viren Hirpara", email = "viren.hirpara.career@gmail.com" }
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+[project.urls]
+Portfolio = "https://www.virenhirpara.com"
+GitHub = "https://github.com/viru185"
+LinkedIn = "https://www.linkedin.com/in/hirparaviren/"
+
 dependencies = [
     "loguru>=0.7.3",
     "openpyxl>=3.1.5",

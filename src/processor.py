@@ -17,6 +17,7 @@ from loguru import logger
 
 from src.config import ISO_TIMESTAMP_FORMAT, MONTH_FORMATS, SHEET_NAME
 from src.mapping import TAG_MAPPING
+from src.runtime import processed_timestamp
 
 MONTH_CANDIDATE_PATTERN = re.compile(r"^[A-Za-z]{3,9}[-\s]\d{2,4}$")
 
@@ -117,7 +118,8 @@ class ExcelProcessor:
         df = self._drop_fy_columns(df)
 
         logger.info("Parsing dates")
-        month_columns = self._extract_month_columns(df.columns)
+        raw_month_columns = self._extract_month_columns(df.columns)
+        month_columns = {col: processed_timestamp(base=dt) for col, dt in raw_month_columns.items()}
 
         logger.info("Melting dataframe")
         melted = df.melt(
@@ -143,10 +145,8 @@ class ExcelProcessor:
         if melted.empty:
             return melted
 
-        melted["MonthDate"] = melted["Month"].map(month_columns.get)
-        melted["DateTime"] = melted["MonthDate"].map(
-            lambda dt: dt.replace(hour=5, minute=0, second=0).strftime(ISO_TIMESTAMP_FORMAT)
-        )
+        melted["MonthDate"] = pd.to_datetime(melted["Month"].map(month_columns.get))
+        melted["DateTime"] = melted["MonthDate"].map(lambda dt: dt.strftime(ISO_TIMESTAMP_FORMAT))
 
         melted = self._duplicate_march_rows(melted)
 
@@ -334,7 +334,7 @@ class ExcelProcessor:
         if isinstance(value, numbers.Integral):
             return str(int(value))
         if isinstance(value, numbers.Real):
-            if pd.isna(value): # type: ignore
+            if pd.isna(value):  # type: ignore
                 return ""
             rounded = round(value)
             if math.isclose(value, rounded, rel_tol=0, abs_tol=1e-9):

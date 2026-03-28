@@ -1,17 +1,24 @@
+
 from __future__ import annotations
 
 import os
-import sys
-from datetime import datetime
 from pathlib import Path
+import sys
 from typing import Optional
 
 import typer
 from dotenv import load_dotenv
 
-from src.config import ARCHIVE_SUFFIX_SUCCESS, DEFAULT_INPUT_FOLDER, DEFAULT_OUTPUT_FOLDER, SUPPORTED_EXTENSIONS
+from src.config import (
+    ARCHIVE_SUFFIX_SUCCESS,
+    DEFAULT_INPUT_FOLDER,
+    DEFAULT_OUTPUT_FOLDER,
+    SUPPORTED_EXTENSIONS,
+)
 from src.logger import logger
+from src.meta import get_author_record, get_project_urls, get_version
 from src.processor import ExcelProcessor, ProcessingError
+from src.runtime import processed_timestamp
 from src.watcher import FolderWatcher, rename_with_suffix
 
 app = typer.Typer(
@@ -59,9 +66,28 @@ def cli(  # noqa: D401
         "--debug",
         help="Enable verbose debug logging to stderr.",
     ),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show the application version and exit.",
+        is_eager=True,
+    ),
+    author: bool = typer.Option(
+        False,
+        "--author",
+        help="Show author & profile links and exit.",
+        is_eager=True,
+    ),
 ) -> None:
     if ctx.invoked_subcommand:
         return
+
+    if version:
+        typer.echo(get_version())
+        raise typer.Exit(code=0)
+    if author:
+        _print_author_metadata()
+        raise typer.Exit(code=0)
 
     if file and auto:
         raise typer.BadParameter("Cannot combine --file and --auto.")
@@ -88,8 +114,13 @@ def cli(  # noqa: D401
             delete_source=delete,
         )
     else:
-        watch_folder = folder or DEFAULT_INPUT_FOLDER
-        destination = output or DEFAULT_OUTPUT_FOLDER
+        watch_folder: Path
+        destination: Path
+        if folder:
+            watch_folder = folder
+            destination = (output or DEFAULT_OUTPUT_FOLDER).resolve()
+        else:
+            watch_folder, destination = _prepare_executable_folders(load_env_vars=True)
         _run_auto_mode(
             processor=processor,
             watch_folder=watch_folder,
@@ -139,30 +170,19 @@ def _run_auto_mode(
 
 
 def _run_default_batch(processor: ExcelProcessor) -> None:
-    base_dir = _resolve_base_directory()
-    dotenv_path = base_dir / ".env"
-    if dotenv_path.exists():
-        load_dotenv(dotenv_path, override=True)
-        logger.info(f"Loaded configuration from '{dotenv_path}'")
-    else:
-        logger.info(f"No .env file found at '{dotenv_path}'; using defaults.")
+    input_dir, output_dir = _prepare_executable_folders(load_env_vars=True)
 
-    input_dir = base_dir / os.getenv("AUTO_UFL_INPUT_DIR", "Client Input")
-    output_dir = base_dir / os.getenv("AUTO_UFL_OUTPUT_DIR", "CSV UFL Input")
-    try:
-        input_dir.mkdir(parents=True, exist_ok=True)
-        output_dir.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        logger.exception(f"Unable to prepare working folders inside '{base_dir}'")
-        return
-
-    log_file = base_dir / "autoUFL.log"
+    log_file = input_dir.parent / "autoUFL.log"
     log_sink_id = logger.add(log_file, level="INFO", enqueue=True, mode="a")
-    logger.info(f"Auto UFL batch run started in '{base_dir}'")
+    logger.info(f"Auto UFL batch run started in '{input_dir.parent}'")
 
     try:
         try:
-            files = sorted(path for path in input_dir.iterdir() if _should_process_input_file(path))
+            files = sorted(
+                path
+                for path in input_dir.iterdir()
+                if _should_process_input_file(path)
+            )
         except OSError:
             logger.exception(f"Unable to scan input folder '{input_dir}'")
             return
@@ -180,19 +200,31 @@ def _run_default_batch(processor: ExcelProcessor) -> None:
             except Exception:  # noqa: BLE001
                 logger.exception(f"Unexpected error while processing '{path.name}'")
                 continue
-            logger.info(f"Finished '{path.name}' -> {result.output_file.name} ({result.rows_written} rows)")
-            rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS, timestamp=datetime.now())
+            logger.info(
+                f"Finished '{path.name}' -> {result.output_file.name} ({result.rows_written} rows)"
+            )
+            rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS, timestamp=processed_timestamp())
         logger.info("Auto UFL batch run completed.")
     finally:
         logger.remove(log_sink_id)
 
 
+def _prepare_executable_folders(load_env_vars: bool) -> tuple[Path, Path]:
+    base_dir = _resolve_base_directory()
+    dotenv_path = base_dir / ".env"
+    if load_env_vars and dotenv_path.exists():
+        load_dotenv(dotenv_path, override=True)
+    input_dir = base_dir / os.getenv("AUTO_UFL_INPUT_DIR", "Client Input")
+    output_dir = base_dir / os.getenv("AUTO_UFL_OUTPUT_DIR", "CSV UFL Input")
+    input_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return input_dir, output_dir
+
+
 def _should_process_input_file(path: Path) -> bool:
     if not path.is_file():
-        logger.info(f"Skipping '{path.name}' because file is not valid.")
         return False
     if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
-        logger.info(f"Skipping '{path.name}' because file extension is not supported.")
         return False
     if _is_marked_done(path):
         logger.info(f"Skipping '{path.name}' because it is already marked as processed.")
@@ -202,6 +234,15 @@ def _should_process_input_file(path: Path) -> bool:
 
 def _is_marked_done(path: Path) -> bool:
     return ARCHIVE_SUFFIX_SUCCESS in path.stem
+
+
+def _print_author_metadata() -> None:
+    author = get_author_record()
+    urls = get_project_urls()
+    typer.echo(f"Name: {author.get('name', 'N/A')}")
+    typer.echo(f"Portfolio: {urls.get('Portfolio', 'N/A')}")
+    typer.echo(f"GitHub: {urls.get('GitHub', 'N/A')}")
+    typer.echo(f"LinkedIn: {urls.get('LinkedIn', 'N/A')}")
 
 
 def _resolve_base_directory() -> Path:

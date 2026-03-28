@@ -11,6 +11,8 @@ wheels/
 
 # Demo Folder
 data/
+Client Input
+CSV UFL Input
 
 # ignore env file
 .env

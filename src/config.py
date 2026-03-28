@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 
 # Logging --------------------------------------------------------------------
-LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "DEBUG")
 LOG_TO_CONSOLE = os.getenv("AUTO_UFL_LOG_CONSOLE", "true").lower() == "true"
 LOG_PATH = os.getenv("AUTO_UFL_LOG_PATH")  # Optional log file
 
@@ -32,6 +32,8 @@ SUPPORTED_EXTENSIONS = (".xls", ".xlsx", ".xlsm")
 
 ARCHIVE_SUFFIX_SUCCESS = "_done"
 ARCHIVE_SUFFIX_ERROR = "_error"
+
+DEFAULT_TIMESTAMP = os.getenv("AUTO_UFL_DEFAULT_TIMESTAMP", "05:00")
 
 ISO_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 

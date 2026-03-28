@@ -1,0 +1,38 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        with:
+          command: release
+          release-type: simple
+          package-name: autoufl
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-attach:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install uv
+        run: pip install uv
+      - name: Sync dependencies
+        run: uv sync --group dev
+      - name: Build standalone exe
+        run: uv run pyinstaller main.py --name AutoUFL --onefile --clean
+      - name: Upload artifact to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/AutoUFL.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
