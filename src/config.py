@@ -17,35 +17,28 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 # Load .env ahead of reading os.getenv values.
 load_dotenv(PROJECT_ROOT / ".env")
 
-# Logging --------------------------------------------------------------------
+# Logging
 LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
-LOG_TO_CONSOLE = os.getenv("AUTO_UFL_LOG_CONSOLE", "true").lower() == "true"
-LOG_PATH = os.getenv("AUTO_UFL_LOG_PATH")  # Optional log file
+LOG_TO_CONSOLE = os.getenv("AUTO_UFL_LOG_CONSOLE", "False")
+LOG_PATH = Path(os.getenv("AUTO_UFL_LOG_PATH", PROJECT_ROOT / "autoUFL.log"))
+LOG_PATH.parent.mkdir(parents=True,exist_ok=True)
 
-# Data processing -------------------------------------------------------------
-SHEET_NAME = os.getenv("AUTO_UFL_SHEET_NAME", "P&B")
+# default dir of file input and output creating on script.
+DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "Client Input"))
+DEFAULT_INPUT_FOLDER.mkdir(exist_ok=True)
+DEFAULT_OUTPUT_FOLDER = Path(os.getenv("AUTO_UFL_OUTPUT_DIR", PROJECT_ROOT / "CSV UFL Input"))
+DEFAULT_OUTPUT_FOLDER.mkdir(exist_ok=True)
 
-DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "data" / "incoming"))
-DEFAULT_OUTPUT_FOLDER = Path(os.getenv("AUTO_UFL_OUTPUT_DIR", PROJECT_ROOT / "data" / "normalized"))
-
+# extension of supported file
 SUPPORTED_EXTENSIONS = (".xls", ".xlsx", ".xlsm")
 
+# suffix of after file is processed.
 ARCHIVE_SUFFIX_SUCCESS = "_done"
 ARCHIVE_SUFFIX_ERROR = "_error"
 
 DEFAULT_TIMESTAMP = os.getenv("AUTO_UFL_DEFAULT_TIMESTAMP", "05:00")
 
 ISO_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
-
-# Month labels seen in the workbook (Apr-25, Mar-2026, etc.)
-MONTH_FORMATS = (
-    "%b-%y",
-    "%b-%Y",
-    "%b %y",
-    "%b %Y",
-    "%B-%y",
-    "%B-%Y",
-)
 
 # Watchdog -------------------------------------------------------------------
 WATCH_POLLING_INTERVAL = float(os.getenv("AUTO_UFL_WATCH_INTERVAL", "1.0"))
