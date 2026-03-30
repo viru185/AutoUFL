@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/viru185/AutoUFL/compare/v0.1.1...v0.2.0) (2026-03-30)
+
+
+### Features
+
+* **build,release:** fix metadata handling, bundle toml, and improve build workflow ([6f17a2b](https://github.com/viru185/AutoUFL/commit/6f17a2b6b4b97694151d469b650298787bccd833))
+
 ## [0.1.1](https://github.com/viru185/AutoUFL/compare/v0.1.0...v0.1.1) (2026-03-30)
 
 
