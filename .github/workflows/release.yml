@@ -2,37 +2,47 @@ name: release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - id: release
+        uses: googleapis/release-please-action@v4
         with:
-          command: release
-          release-type: simple
-          package-name: autoufl
-          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: python
 
   build-and-attach:
     needs: release
+    if: ${{ needs.release.outputs.release_created == 'true' }}
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+
       - name: Install uv
         run: pip install uv
+
       - name: Sync dependencies
         run: uv sync --group dev
-      - name: Build standalone exe
+
+      - name: Build exe
         run: uv run pyinstaller main.py --name AutoUFL --onefile --clean
-      - name: Upload artifact to release
+
+      - name: Upload exe to release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/AutoUFL.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
