@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
 
     steps:
       - id: release
@@ -46,3 +47,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/AutoUFL.exe
+          tag_name: ${{ needs.release.outputs.tag_name }}
