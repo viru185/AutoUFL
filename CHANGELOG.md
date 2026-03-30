@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/viru185/AutoUFL/compare/v0.1.0...v0.1.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* realease workflow, will add the tag and attach exe file. ([a093a13](https://github.com/viru185/AutoUFL/commit/a093a13f3d97dbb3aad00db5a1043b4c6ce9d53a))
+
 ## 0.1.0 (2026-03-30)
 
 
