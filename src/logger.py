@@ -24,10 +24,8 @@ def configure_logger() -> None:
         )
 
     if LOG_PATH:
-        log_file = Path(LOG_PATH)
-        log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.add(
-            log_file,
+            LOG_PATH,
             level=LOG_LEVEL,
             enqueue=True,
             rotation="5 MB",
