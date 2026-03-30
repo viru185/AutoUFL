@@ -38,10 +38,10 @@ jobs:
         run: pip install uv
 
       - name: Sync dependencies
-        run: uv sync --group dev
+        run:  uv sync --all-extras --all-groups
 
       - name: Build exe
-        run: uv run pyinstaller main.py --name AutoUFL --onefile --clean
+        run: uv run pyinstaller autoUFL.spec --clean
 
       - name: Upload exe to release
         uses: softprops/action-gh-release@v1

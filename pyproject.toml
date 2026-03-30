@@ -9,20 +9,19 @@ authors = [
 ]
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
+dependencies = [
+    "loguru>=0.7.3",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.1",
+    "python-dotenv>=1.2.2",
+    "typer>=0.24.1",
+    "watchdog>=6.0.0",
+]
 
 [project.urls]
 Portfolio = "https://www.virenhirpara.com"
 GitHub = "https://github.com/viru185"
 LinkedIn = "https://www.linkedin.com/in/hirparaviren/"
-
-dependencies = [
-    "loguru>=0.7.3",
-    "openpyxl>=3.1.5",
-    "pandas>=2.2.2",
-    "python-dotenv>=1.0.1",
-    "typer>=0.24.1",
-    "watchdog>=6.0.0",
-]
 
 [dependency-groups]
 dev = [
