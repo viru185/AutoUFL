@@ -8,6 +8,7 @@ from loguru import logger
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
+from src.clients import ExcelProcessor
 from src.config import (
     ARCHIVE_SUFFIX_ERROR,
     ARCHIVE_SUFFIX_SUCCESS,
@@ -15,7 +16,6 @@ from src.config import (
     WATCH_POLLING_INTERVAL,
     WATCH_STABILIZATION_SECONDS,
 )
-from src.processor import ExcelProcessor, ProcessingError
 from src.runtime import processed_timestamp
 
 
@@ -106,6 +106,35 @@ class _ExcelEventHandler(FileSystemEventHandler):
         return path.suffix.lower() in SUPPORTED_EXTENSIONS
 
 
+def rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
+    base_stem = path.stem
+    stamp_source = timestamp or processed_timestamp()
+    composed = None
+    if suffix == ARCHIVE_SUFFIX_SUCCESS:
+        stamp = stamp_source.strftime("%Y-%m-%d_%H-%M-%S")
+        if base_stem.endswith(suffix):
+            base_stem = base_stem[: -len(suffix)]
+        composed = f"{base_stem}_{stamp}{suffix}"
+    if composed is None:
+        composed = f"{base_stem}{suffix}"
+
+    candidate = path.with_name(f"{composed}{path.suffix}")
+    counter = 1
+    while candidate.exists():
+        candidate = path.with_name(f"{composed}_{counter}{path.suffix}")
+        counter += 1
+
+    logger.info(f"Renaming file '{path.name}' to suffix '{suffix}'")
+    try:
+        path.rename(candidate)
+        return candidate
+    except FileNotFoundError:
+        return path
+    except OSError as exc:
+        logger.error(f"Failed to rename '{path}': {exc}")
+        return path
+
+
 class FolderWatcher:
     """Runs a watchdog observer for Excel drops."""
 
@@ -145,32 +174,3 @@ class FolderWatcher:
         finally:
             observer.stop()
             observer.join()
-
-
-def rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
-    base_stem = path.stem
-    stamp_source = timestamp or processed_timestamp()
-    composed = None
-    if suffix == ARCHIVE_SUFFIX_SUCCESS:
-        stamp = stamp_source.strftime("%Y-%m-%d_%H-%M-%S")
-        if base_stem.endswith(suffix):
-            base_stem = base_stem[: -len(suffix)]
-        composed = f"{base_stem}_{stamp}{suffix}"
-    if composed is None:
-        composed = f"{base_stem}{suffix}"
-
-    candidate = path.with_name(f"{composed}{path.suffix}")
-    counter = 1
-    while candidate.exists():
-        candidate = path.with_name(f"{composed}_{counter}{path.suffix}")
-        counter += 1
-
-    logger.info(f"Renaming file '{path.name}' to suffix '{suffix}'")
-    try:
-        path.rename(candidate)
-        return candidate
-    except FileNotFoundError:
-        return path
-    except OSError as exc:
-        logger.error(f"Failed to rename '{path}': {exc}")
-        return path
