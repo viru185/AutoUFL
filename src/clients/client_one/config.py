@@ -1,5 +1,7 @@
-"""Mapping between metric descriptions and PI tags."""
+SHEET_TO_PROCESS: list[str] = []
 
+
+# Mapping between metric descriptions and PI tags.
 TAG_MAPPING = {
     "Alumina Produced, T": "HIL_ALU_RKT_REF_UTILT_MNL_ALU_PROD",
     "Alumina Calcined, T": "HIL_ALU_RKT_REF_UTILT_MNL_ALU_CALCN",
