@@ -8,7 +8,7 @@ from loguru import logger
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from src.clients import ExcelProcessor
+from src.clients import ProcessingError
 from src.config import (
     ARCHIVE_SUFFIX_ERROR,
     ARCHIVE_SUFFIX_SUCCESS,
@@ -22,7 +22,7 @@ from src.runtime import processed_timestamp
 class _ExcelEventHandler(FileSystemEventHandler):
     def __init__(
         self,
-        processor: ExcelProcessor,
+        processor,
         output_dir: Path,
         delete_source: bool,
     ) -> None:
@@ -31,14 +31,14 @@ class _ExcelEventHandler(FileSystemEventHandler):
         self.delete_source = delete_source
         self._in_progress: set[Path] = set()
 
-    def on_created(self, event: FileSystemEvent) -> None:  # noqa: D401
+    def on_created(self, event: FileSystemEvent) -> None:
         self._handle_event(event)
 
     def on_modified(self, event: FileSystemEvent) -> None:
         self._handle_event(event)
 
     def on_moved(self, event: FileSystemEvent) -> None:
-        event_src = Path(getattr(event, "dest_path", event.src_path))
+        event_src = Path(str(getattr(event, "dest_path", event.src_path)))
         self._process_path(event_src)
 
     def process_existing_files(self, folder: Path) -> None:
@@ -50,7 +50,7 @@ class _ExcelEventHandler(FileSystemEventHandler):
     def _handle_event(self, event: FileSystemEvent) -> None:
         if event.is_directory:
             return
-        self._process_path(Path(event.src_path))
+        self._process_path(Path(str(event.src_path)))
 
     def _process_path(self, path: Path) -> None:
         if not self._is_supported(path):
@@ -76,13 +76,13 @@ class _ExcelEventHandler(FileSystemEventHandler):
             if self.delete_source:
                 path.unlink(missing_ok=True)
             else:
-                rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS)
+                self._rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS)
         except ProcessingError:
             logger.exception(f"Processing failed for '{path}'")
-            rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
-        except Exception:  # noqa: BLE001
+            self._rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
+        except Exception:
             logger.exception(f"Unexpected failure while handling '{path.name}'")
-            rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
+            self._rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
 
     def _wait_until_stable(self, path: Path) -> None:
         last_size = -1
@@ -105,34 +105,34 @@ class _ExcelEventHandler(FileSystemEventHandler):
             return False
         return path.suffix.lower() in SUPPORTED_EXTENSIONS
 
+    @staticmethod
+    def _rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
+        base_stem = path.stem
+        stamp_source = timestamp or processed_timestamp()
+        composed = None
+        if suffix == ARCHIVE_SUFFIX_SUCCESS:
+            stamp = stamp_source.strftime("%Y-%m-%d_%H-%M-%S")
+            if base_stem.endswith(suffix):
+                base_stem = base_stem[: -len(suffix)]
+            composed = f"{base_stem}_{stamp}{suffix}"
+        if composed is None:
+            composed = f"{base_stem}{suffix}"
 
-def rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
-    base_stem = path.stem
-    stamp_source = timestamp or processed_timestamp()
-    composed = None
-    if suffix == ARCHIVE_SUFFIX_SUCCESS:
-        stamp = stamp_source.strftime("%Y-%m-%d_%H-%M-%S")
-        if base_stem.endswith(suffix):
-            base_stem = base_stem[: -len(suffix)]
-        composed = f"{base_stem}_{stamp}{suffix}"
-    if composed is None:
-        composed = f"{base_stem}{suffix}"
+        candidate = path.with_name(f"{composed}{path.suffix}")
+        counter = 1
+        while candidate.exists():
+            candidate = path.with_name(f"{composed}_{counter}{path.suffix}")
+            counter += 1
 
-    candidate = path.with_name(f"{composed}{path.suffix}")
-    counter = 1
-    while candidate.exists():
-        candidate = path.with_name(f"{composed}_{counter}{path.suffix}")
-        counter += 1
-
-    logger.info(f"Renaming file '{path.name}' to suffix '{suffix}'")
-    try:
-        path.rename(candidate)
-        return candidate
-    except FileNotFoundError:
-        return path
-    except OSError as exc:
-        logger.error(f"Failed to rename '{path}': {exc}")
-        return path
+        logger.info(f"Renaming file '{path.name}' to suffix '{suffix}'")
+        try:
+            path.rename(candidate)
+            return candidate
+        except FileNotFoundError:
+            return path
+        except OSError as exc:
+            logger.error(f"Failed to rename '{path}': {exc}")
+            return path
 
 
 class FolderWatcher:
@@ -142,7 +142,7 @@ class FolderWatcher:
         self,
         folder: Path,
         output_dir: Path,
-        processor: ExcelProcessor,
+        processor,
         delete_source: bool = False,
     ) -> None:
         self.folder = folder
