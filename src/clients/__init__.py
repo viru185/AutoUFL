@@ -27,8 +27,8 @@ try:
     ProcessingError: Type[Exception] = getattr(processor, "ProcessingError")
 
 except (ImportError, AttributeError):
-    logger.critical(
-        f"Could not load required modules for '{client_name}'."
+    logger.exception(
+        f"Could not load required modules for '{client_name}'. "
         f"Ensure 'clients/{client_name}/processor.py' exists and contains a 'Processor' class."
     )
     sys.exit(1)
