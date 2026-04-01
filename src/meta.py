@@ -5,11 +5,11 @@ from pathlib import Path
 import sys
 import tomllib
 
-PACKAGE_NAME = "autoufl"
-_FALLBACK_VERSION = "0.0.0"
+_PACKAGE_NAME = "autoUFL"
+_FALLBACK_VERSION = "v0.0.0"
 _AUTHOR = {
     "name": "Viren Hirpara",
-    "email": "viren@virenhirpara.com",
+    "email": "viren.hirpara.career@gmail.com",
 }
 _URLS = {
     "Portfolio": "https://www.virenhirpara.com",
@@ -18,7 +18,7 @@ _URLS = {
 }
 
 
-def get_base_path() -> Path:
+def _get_base_path() -> Path:
     if getattr(sys, "frozen", False):
         return Path(getattr(sys, "_MEIPASS"))
     return Path(__file__).resolve().parents[1]
@@ -26,10 +26,10 @@ def get_base_path() -> Path:
 
 def _version_from_pyproject() -> str | None:
     try:
-        pyproject = get_base_path() / "pyproject.toml"
+        pyproject = _get_base_path() / "pyproject.toml"
         with pyproject.open("rb") as handle:
             data = tomllib.load(handle)
-        return data["project"]["version"]
+        return f"v{data["project"]["version"]}"
     except Exception:
         return None
 
@@ -39,14 +39,9 @@ def get_version() -> str:
     if file_version:
         return file_version
     try:
-        return metadata.version(PACKAGE_NAME)
+        return metadata.version(_PACKAGE_NAME)
     except metadata.PackageNotFoundError:
         return _FALLBACK_VERSION
 
-
-def get_author_record() -> dict:
-    return _AUTHOR.copy()
-
-
-def get_project_urls() -> dict:
-    return _URLS.copy()
+def get_authot_details() -> dict:
+    return _AUTHOR | _URLS
