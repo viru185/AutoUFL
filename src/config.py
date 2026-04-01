@@ -24,9 +24,9 @@ LOG_PATH = Path(os.getenv("AUTO_UFL_LOG_PATH", PROJECT_ROOT / "autoUFL.log"))
 LOG_PATH.parent.mkdir(parents=True,exist_ok=True)
 
 # default dir of file input and output creating on script.
-DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "Client Input"))
+DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "Client Input")).resolve()
 DEFAULT_INPUT_FOLDER.mkdir(exist_ok=True)
-DEFAULT_OUTPUT_FOLDER = Path(os.getenv("AUTO_UFL_OUTPUT_DIR", PROJECT_ROOT / "CSV UFL Input"))
+DEFAULT_OUTPUT_FOLDER = Path(os.getenv("AUTO_UFL_OUTPUT_DIR", PROJECT_ROOT / "CSV UFL Input")).resolve()
 DEFAULT_OUTPUT_FOLDER.mkdir(exist_ok=True)
 
 # extension of supported file
