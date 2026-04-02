@@ -1,0 +1,37 @@
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch: # Allows you to run it manually whenever you want
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-attach:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --all-groups
+
+      - name: Build exe with PyInstaller
+        run: uv run pyinstaller autoUFL.spec --clean
+
+      - name: Upload exe to test release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/AutoUFL.exe
+          tag_name: "v0.0.0-dev-test" 
+          body: "Automated test build from dev branch. This release is overwritten on every push to dev."
+          prerelease: true
