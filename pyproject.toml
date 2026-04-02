@@ -11,10 +11,8 @@ license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 dependencies = [
     "loguru>=0.7.3",
-    "openpyxl>=3.1.5",
     "pandas>=3.0.1",
     "python-dotenv>=1.2.2",
-    "typer>=0.24.1",
     "watchdog>=6.0.0",
 ]
 
