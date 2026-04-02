@@ -1,14 +1,12 @@
-from __future__ import annotations
-
 import time
 from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
-from watchdog.events import FileSystemEvent, FileSystemEventHandler
+from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from src.clients import ProcessingError
+from src.clients.base_processor import ProcessingError
 from src.config import (
     ARCHIVE_SUFFIX_ERROR,
     ARCHIVE_SUFFIX_SUCCESS,
@@ -19,158 +17,141 @@ from src.config import (
 from src.runtime import processed_timestamp
 
 
-class _ExcelEventHandler(FileSystemEventHandler):
-    def __init__(
-        self,
-        processor,
-        output_dir: Path,
-        delete_source: bool,
-    ) -> None:
+class ExcelEventHandler(FileSystemEventHandler):
+    def __init__(self, processor, output_dir: Path, delete_source: bool):
         self.processor = processor
         self.output_dir = output_dir
         self.delete_source = delete_source
-        self._in_progress: set[Path] = set()
+        self._in_progress = set()
 
-    def on_created(self, event: FileSystemEvent) -> None:
-        self._handle_event(event)
-
-    def on_modified(self, event: FileSystemEvent) -> None:
-        self._handle_event(event)
-
-    def on_moved(self, event: FileSystemEvent) -> None:
-        event_src = Path(str(getattr(event, "dest_path", event.src_path)))
-        self._process_path(event_src)
-
-    def process_existing_files(self, folder: Path) -> None:
-        for path in sorted(folder.iterdir()):
-            if path.is_file():
-                self._process_path(path)
-
-    # ------------------------------------------------------------------ helpers
-    def _handle_event(self, event: FileSystemEvent) -> None:
+    # ---------------- Events ----------------
+    def _handle_event(self, event):
         if event.is_directory:
             return
-        self._process_path(Path(str(event.src_path)))
 
-    def _process_path(self, path: Path) -> None:
-        if not self._is_supported(path):
-            return
-        if path in self._in_progress:
+        path = Path(getattr(event, "dest_path", event.src_path))
+        self.process_file(path)
+
+    def on_created(self, event):
+        self._handle_event(event)
+
+    def on_modified(self, event):
+        self._handle_event(event)
+
+    def on_moved(self, event):
+        self._handle_event(event)
+
+    # ---------------- Core ----------------
+    def process_existing_files(self, folder: Path):
+        for path in folder.iterdir():
+            if path.is_file():
+                self.process_file(path)
+
+    def process_file(self, path: Path):
+        if not self._is_valid(path):
             return
 
-        logger.info(f"New file detected: {path}")
-        logger.debug(f"Output path: {self.output_dir / f'{path.stem}.csv'}")
+        logger.info(f"Processing file: {path}")
         self._in_progress.add(path)
+
         try:
-            self._wait_until_stable(path)
-            self._process_file(path)
+            self._wait_stable(path)
+            self._run_processor(path)
         finally:
             self._in_progress.discard(path)
 
-    def _process_file(self, path: Path) -> None:
+    # ---------------- Helpers ----------------
+    def _run_processor(self, path: Path):
         try:
             result = self.processor.process_file(path, self.output_dir)
-            logger.success(
-                f"Processed '{path.name}' -> {result.rows_written} rows into {result.output_file.name}",
-            )
+
+            logger.success(f"{path.name} -> {result.rows_written} rows -> {result.output_file.name}")
+
             if self.delete_source:
                 path.unlink(missing_ok=True)
             else:
-                self._rename_with_suffix(path, ARCHIVE_SUFFIX_SUCCESS)
-        except ProcessingError:
-            logger.exception(f"Processing failed for '{path}'")
-            self._rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
-        except Exception:
-            logger.exception(f"Unexpected failure while handling '{path.name}'")
-            self._rename_with_suffix(path, ARCHIVE_SUFFIX_ERROR)
+                self._rename(path, ARCHIVE_SUFFIX_SUCCESS)
 
-    def _wait_until_stable(self, path: Path) -> None:
+        except ProcessingError:
+            logger.exception(f"Processing failed: {path.name}")
+            self._rename(path, ARCHIVE_SUFFIX_ERROR)
+
+        except Exception:
+            logger.exception(f"Unexpected error: {path.name}")
+            self._rename(path, ARCHIVE_SUFFIX_ERROR)
+
+    def _wait_stable(self, path: Path):
         last_size = -1
+
         while True:
             try:
-                current_size = path.stat().st_size
+                size = path.stat().st_size
             except FileNotFoundError:
                 return
-            if current_size == last_size:
-                break
-            last_size = current_size
+
+            if size == last_size:
+                return
+
+            last_size = size
             time.sleep(WATCH_STABILIZATION_SECONDS)
 
-    @staticmethod
-    def _is_supported(path: Path) -> bool:
-        if not path.exists():
-            return False
-        name = path.stem
-        if name.endswith(ARCHIVE_SUFFIX_SUCCESS) or name.endswith(ARCHIVE_SUFFIX_ERROR):
-            return False
-        return path.suffix.lower() in SUPPORTED_EXTENSIONS
+    def _is_valid(self, path: Path):
+        return (
+            path.exists()
+            and path not in self._in_progress
+            and not path.stem.endswith((ARCHIVE_SUFFIX_SUCCESS, ARCHIVE_SUFFIX_ERROR))
+            and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        )
 
-    @staticmethod
-    def _rename_with_suffix(path: Path, suffix: str, *, timestamp: datetime | None = None) -> Path:
-        base_stem = path.stem
-        stamp_source = timestamp or processed_timestamp()
-        composed = None
+    def _rename(self, path: Path, suffix: str):
+        base = path.stem
+
         if suffix == ARCHIVE_SUFFIX_SUCCESS:
-            stamp = stamp_source.strftime("%Y-%m-%d_%H-%M-%S")
-            if base_stem.endswith(suffix):
-                base_stem = base_stem[: -len(suffix)]
-            composed = f"{base_stem}_{stamp}{suffix}"
-        if composed is None:
-            composed = f"{base_stem}{suffix}"
+            timestamp = processed_timestamp().strftime("%Y-%m-%d_%H-%M-%S")
+            new_name = f"{base}_{timestamp}{suffix}{path.suffix}"
+        else:
+            new_name = f"{base}{suffix}{path.suffix}"
 
-        candidate = path.with_name(f"{composed}{path.suffix}")
-        counter = 1
-        while candidate.exists():
-            candidate = path.with_name(f"{composed}_{counter}{path.suffix}")
-            counter += 1
+        new_path = path.with_name(new_name)
 
-        logger.info(f"Renaming file '{path.name}' to suffix '{suffix}'")
         try:
-            path.rename(candidate)
-            return candidate
-        except FileNotFoundError:
-            return path
-        except OSError as exc:
-            logger.error(f"Failed to rename '{path}': {exc}")
-            return path
+            path.rename(new_path)
+            logger.info(f"Renamed: {path.name} -> {new_path.name}")
+        except Exception as e:
+            logger.error(f"Rename failed for {path.name}: {e}")
 
 
 class FolderWatcher:
-    """Runs a watchdog observer for Excel drops."""
-
-    def __init__(
-        self,
-        folder: Path,
-        output_dir: Path,
-        processor,
-        delete_source: bool = False,
-    ) -> None:
+    def __init__(self, folder: Path, output_dir: Path, processor, delete_source=False):
         self.folder = folder
         self.output_dir = output_dir
         self.processor = processor
         self.delete_source = delete_source
 
-    def start(self) -> None:
+    def start(self):
         self.folder.mkdir(parents=True, exist_ok=True)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        handler = _ExcelEventHandler(
-            processor=self.processor,
-            output_dir=self.output_dir,
-            delete_source=self.delete_source,
+        handler = ExcelEventHandler(
+            self.processor,
+            self.output_dir,
+            self.delete_source,
         )
+
+        # Process existing files first
         handler.process_existing_files(self.folder)
 
         observer = Observer()
         observer.schedule(handler, str(self.folder), recursive=False)
         observer.start()
 
-        logger.info(f"Watching folder {self.folder} for Excel files -> {self.output_dir}")
+        logger.info(f"Watching folder: {self.folder}")
+
         try:
             while True:
                 time.sleep(WATCH_POLLING_INTERVAL)
         except KeyboardInterrupt:
-            logger.info("Stopping folder watcher...")
+            logger.info("Stopping watcher...")
         finally:
             observer.stop()
             observer.join()
