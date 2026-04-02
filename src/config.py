@@ -38,7 +38,7 @@ ARCHIVE_SUFFIX_ERROR = "_error"
 
 DEFAULT_TIMESTAMP = os.getenv("AUTO_UFL_DEFAULT_TIMESTAMP", "05:00:00")
 
-ISO_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
+ISO_TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 
 # Watchdog -------------------------------------------------------------------
 WATCH_POLLING_INTERVAL = float(os.getenv("AUTO_UFL_WATCH_INTERVAL", "1.0"))
