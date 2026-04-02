@@ -24,7 +24,6 @@ try:
 
     # Pull class/function into the local namespace
     ExcelProcessor = getattr(processor, "ExcelProcessor")
-    ProcessingError: Type[Exception] = getattr(processor, "ProcessingError")
 
 except (ImportError, AttributeError):
     logger.exception(
@@ -33,4 +32,4 @@ except (ImportError, AttributeError):
     )
     sys.exit(1)
 
-__all__ = ["ExcelProcessor", "ProcessingError"]
+__all__ = ["ExcelProcessor"]
