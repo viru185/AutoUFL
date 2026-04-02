@@ -239,6 +239,26 @@ class baseExcelProcessor:
             counter += 1
 
     @staticmethod
+    def _rename_columns(df, column_map: dict):
+        """
+        Rename dataframe columns using a mapping dictionary.
+
+        Args:
+            df (pd.DataFrame): Input dataframe
+            column_map (dict): Mapping of old column names to new names
+
+        Returns:
+            pd.DataFrame: DataFrame with renamed columns
+        """
+        if df is None or df.empty:
+            return df
+
+        # Only rename columns that actually exist in df
+        valid_map = {k: v for k, v in column_map.items() if k in df.columns}
+
+        return df.rename(columns=valid_map)
+    
+    @staticmethod
     def _save_ufl_csv(df: pd.DataFrame, output_file: Path) -> bool:
         """
         Save the DataFrame to a CSV file.
