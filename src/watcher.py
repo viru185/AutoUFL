@@ -10,7 +10,7 @@ from src.clients.base_processor import ProcessingError
 from src.config import (
     ARCHIVE_SUFFIX_ERROR,
     ARCHIVE_SUFFIX_SUCCESS,
-    DEFAULT_TIMESTAMP,
+    ISO_TIMESTAMP_FORMAT,
     SUPPORTED_EXTENSIONS,
     WATCH_POLLING_INTERVAL,
     WATCH_STABILIZATION_SECONDS,
@@ -107,7 +107,7 @@ class ExcelEventHandler(FileSystemEventHandler):
         base = path.stem
 
         if suffix == ARCHIVE_SUFFIX_SUCCESS:
-            timestamp = datetime.now().strftime(DEFAULT_TIMESTAMP)
+            timestamp = datetime.now().strftime(ISO_TIMESTAMP_FORMAT)
             new_name = f"{base}_{timestamp}{suffix}{path.suffix}"
         else:
             new_name = f"{base}{suffix}{path.suffix}"
@@ -118,7 +118,7 @@ class ExcelEventHandler(FileSystemEventHandler):
             path.rename(new_path)
             logger.info(f"Renamed: {path.name} -> {new_path.name}")
         except Exception as e:
-            logger.error(f"Rename failed for {path.name}: {e}")
+            logger.exception(f"Rename failed for {path.name}: {e}")
 
 
 class FolderWatcher:
