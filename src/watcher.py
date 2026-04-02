@@ -10,11 +10,11 @@ from src.clients.base_processor import ProcessingError
 from src.config import (
     ARCHIVE_SUFFIX_ERROR,
     ARCHIVE_SUFFIX_SUCCESS,
+    DEFAULT_TIMESTAMP,
     SUPPORTED_EXTENSIONS,
     WATCH_POLLING_INTERVAL,
     WATCH_STABILIZATION_SECONDS,
 )
-from src.runtime import processed_timestamp
 
 
 class ExcelEventHandler(FileSystemEventHandler):
@@ -107,7 +107,7 @@ class ExcelEventHandler(FileSystemEventHandler):
         base = path.stem
 
         if suffix == ARCHIVE_SUFFIX_SUCCESS:
-            timestamp = processed_timestamp().strftime("%Y-%m-%d_%H-%M-%S")
+            timestamp = datetime.now().strftime(DEFAULT_TIMESTAMP)
             new_name = f"{base}_{timestamp}{suffix}{path.suffix}"
         else:
             new_name = f"{base}{suffix}{path.suffix}"
