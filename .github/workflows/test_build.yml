@@ -1,8 +1,10 @@
+name: Dev Build & Test
+
 on:
   push:
     branches:
       - dev
-  workflow_dispatch: # Allows you to run it manually whenever you want
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -10,6 +12,11 @@ permissions:
 jobs:
   build-and-attach:
     runs-on: windows-latest
+    strategy:
+      # This creates two separate runs: one for utkal, one for renukoot
+      matrix:
+        client_env: [utkal, renukoot]
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -26,12 +33,23 @@ jobs:
         run: uv sync --all-extras --all-groups
 
       - name: Build exe with PyInstaller
+        # We set the env variable here specifically for the build process
         run: uv run pyinstaller autoUFL.spec --clean
+        env:
+          AUTO_UFL_CLIENT_ENV: ${{ matrix.client_env }}
+
+      - name: Rename artifact
+        # Rename the file to include the environment name (e.g., AutoUFL_utkal.exe)
+        shell: pwsh
+        run: |
+          Rename-Item -Path "dist/AutoUFL.exe" -NewName "AutoUFL_${{ matrix.client_env }}.exe"
 
       - name: Upload exe to test release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/AutoUFL.exe
+          files: dist/AutoUFL_${{ matrix.client_env }}.exe
           tag_name: "v0.0.0-dev-test" 
-          body: "Automated test build from dev branch. This release is overwritten on every push to dev."
+          body: "Automated test build from dev branch. Includes builds for Utkal and Renukoot."
           prerelease: true
+          # append_body: true is helpful if you want to keep logs, 
+          # but softprops handles multiple uploads to one tag automatically.
