@@ -1,37 +1,31 @@
-import importlib
-import os
-import sys
+from __future__ import annotations
+
 from typing import Type
 
 from src.logger import logger
 
-# Get the client name from the environment
-client_name = os.getenv("AUTO_UFL_CLIENT_ENV", "none").lower()
+from .registry import CLIENT_REGISTRY
 
-if client_name == "none":
-    logger.error("No client found in the environment variable")
-    sys.exit(1)
-elif client_name == "all":
-    logger.info("Loading all clients for all in executable build.")
-    client_name = "utkal"
-else:
-    logger.info(f"{client_name} is found in environment variable")
 
-try:
-    # Construct the full module path
-    module_path = f"src.clients.{client_name}.processor"
+def get_processor_class(client_name: str | None = None) -> Type:
+    """
+    Resolve the ExcelProcessor class for the requested client.
 
-    # Dynamically import the module
-    processor = importlib.import_module(module_path)
+    When client_name is None we fall back to the build default.
+    """
 
-    # Pull class/function into the local namespace
-    ExcelProcessor = getattr(processor, "ExcelProcessor")
+    processor_cls = CLIENT_REGISTRY.load_processor_class(client_name)
+    resolved = client_name or CLIENT_REGISTRY.default_client() or "unknown"
+    logger.info(f"Using ExcelProcessor for client {resolved}")
+    return processor_cls
 
-except (ImportError, AttributeError):
-    logger.exception(
-        f"Could not load required modules for '{client_name}'. "
-        f"Ensure 'clients/{client_name}/processor.py' exists and contains a 'Processor' class."
-    )
-    sys.exit(1)
 
-__all__ = ["ExcelProcessor"]
+def list_available_clients() -> tuple[str, ...]:
+    """Return the client names packaged with the current build."""
+
+    return CLIENT_REGISTRY.available_clients()
+
+
+ExcelProcessor = get_processor_class()
+
+__all__ = ["ExcelProcessor", "get_processor_class", "list_available_clients", "CLIENT_REGISTRY"]
