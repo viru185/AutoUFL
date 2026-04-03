@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.0.0](https://github.com/viru185/AutoUFL/compare/v0.2.0...v1.0.0) (2026-04-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* 
+* **init:** dynamic import of the processor module based on environment variable.
+
+### Features
+
+* add config for the client one. ([974e208](https://github.com/viru185/AutoUFL/commit/974e2081825cdbb674ad8f20eb862fe1781184b9))
+* **build:** add script to automate building for multiple clients ([859ba21](https://github.com/viru185/AutoUFL/commit/859ba213c49c153ba876116fe2d0e30c3a25e946))
+* **build:** implement manifest-based multi-client build pipeline ([37b3b5e](https://github.com/viru185/AutoUFL/commit/37b3b5e0add9daf674f21ee282a896caaf17259b))
+* **ci:** add GitHub Actions workflow for test build and release process ([4268f61](https://github.com/viru185/AutoUFL/commit/4268f6166d8acec13dd42a253b3f7599ac02bc80))
+* **ci:** enhance GitHub Actions workflow to support multiple client environments ([8020b1d](https://github.com/viru185/AutoUFL/commit/8020b1d1c6ca18aef892459f15746174df3883bb))
+* **cli:** add client selection flag for runtime execution ([98f91e2](https://github.com/viru185/AutoUFL/commit/98f91e2f136d816048697be19e97485bc9040379))
+* **client:** add utkal client configuration for sheet processing and tag mapping ([dcfe4be](https://github.com/viru185/AutoUFL/commit/dcfe4be7f7c4b26643044bdf806bec821c5a6fe9))
+* **clients:** introduce manifest-driven client registry ([f8e32ef](https://github.com/viru185/AutoUFL/commit/f8e32efcdbd3d4a3e7288824b69aefae944eab0b))
+* **config:** enhance base path retrieval for frozen applications ([859ba21](https://github.com/viru185/AutoUFL/commit/859ba213c49c153ba876116fe2d0e30c3a25e946))
+* **init:** dynamic import of the processor module based on environment variable. ([e1c544b](https://github.com/viru185/AutoUFL/commit/e1c544b136b998dda9dd0b18baab7c261677c4f9))
+* **processor:** add baseExcelProcessor class for Excel file processing with regex column filtering and CSV output, will be common for all the client ([8db8e74](https://github.com/viru185/AutoUFL/commit/8db8e743d9e3fc613c1a30c5d226eddbb1bf077c))
+* **processor:** add method to rename dataframe columns using a mapping dictionary ([cecb011](https://github.com/viru185/AutoUFL/commit/cecb011f9ee3c334fcda235933c872817b6f21df))
+* **processor:** implement ExcelProcessor class for for utkal site processing Excel files and generating UFL CSV output ([2f62103](https://github.com/viru185/AutoUFL/commit/2f62103c0376ed046c9058acba989dd4bca561a6))
+* **processor:** implement ExcelProcessor class for processing Excel files and generating UFL CSV output for client_one ([c4b0523](https://github.com/viru185/AutoUFL/commit/c4b0523ab84d971abe60a2eb7ad9dddc26ee24a4))
+* release manifest-driven multi-client build system with automated CI/CD pipeline ([7d4bea2](https://github.com/viru185/AutoUFL/commit/7d4bea2fbb18fd7a84af9f014da03d2c28ff0c7a))
+* **utkal:** add initial implementation of Utkal client module ([92c9b96](https://github.com/viru185/AutoUFL/commit/92c9b96c3a5d7c4a183c6daa4af93144569e3b11))
+
+
+### Bug Fixes
+
+* **config:** default timestamp format. ([5847e0c](https://github.com/viru185/AutoUFL/commit/5847e0c78f37190829617051782a506fbfb56269))
+* **config:** LOG_TO_CONSOLE constant is set to bool. ([f0b7bbe](https://github.com/viru185/AutoUFL/commit/f0b7bbe880854470be79301c39cb5739e3d267bc))
+* **config:** rename config file with client_config for each config to separate from app config file ([d5cdc38](https://github.com/viru185/AutoUFL/commit/d5cdc384b02802b5fb3579e38298bddaf58bea8b))
+* **config:** resolve input and output directory path ([708943f](https://github.com/viru185/AutoUFL/commit/708943fd16e65b1d17cece5c7bc1815a2abf0257))
+* **config:** update ISO timestamp format to use underscore separator ([2b54de3](https://github.com/viru185/AutoUFL/commit/2b54de3ac560f8aef7cabe0473e919ef065460a0))
+* **config:** update sheets to process, add regex for column filtering, and move tag mapping to site specific ([1671a10](https://github.com/viru185/AutoUFL/commit/1671a10c665fb675c8a4c1901fbec051e145d0f7))
+* **dependencies:** add openpyxl dependency for Excel file processing ([96fe48c](https://github.com/viru185/AutoUFL/commit/96fe48cd512ac9f8a64296c1f7b9c2272dd18f4e))
+* **dependencies:** remove unused dependencies openpyxl and typer from project ([e30b529](https://github.com/viru185/AutoUFL/commit/e30b5295be240c57493c0fd11ea7655b20468324))
+* **init:** log client loading information for 'all' clients ([859ba21](https://github.com/viru185/AutoUFL/commit/859ba213c49c153ba876116fe2d0e30c3a25e946))
+* **init:** remove unused ProcessingError from client module exports ([e0288de](https://github.com/viru185/AutoUFL/commit/e0288de612445e9b5400af9c5554e4c50067fbc9))
+* **logger:** now logger will alway use log file next executable. ([554c6bf](https://github.com/viru185/AutoUFL/commit/554c6bf12557438852ccf4d882229245b003a559))
+* **watcher:** change the logic of the file, remove repeated code logic ([ca5f567](https://github.com/viru185/AutoUFL/commit/ca5f5672c15ff7001ab4b887a071ea12718d1a94))
+* **watcher:** specify return type for _rename method ([859ba21](https://github.com/viru185/AutoUFL/commit/859ba213c49c153ba876116fe2d0e30c3a25e946))
+* **watcher:** update timestamp generation to use current datetime format ([41f3ae2](https://github.com/viru185/AutoUFL/commit/41f3ae2af32870d500bc85c8201097b800a109c5))
+* **watcher:** update timestamp generation to use ISO format and improve error logging ([42a63a3](https://github.com/viru185/AutoUFL/commit/42a63a3f8372d50b87b4e332503fdec0de78198d))
+
 ## [0.2.0](https://github.com/viru185/AutoUFL/compare/v0.1.1...v0.2.0) (2026-03-30)
 
 
