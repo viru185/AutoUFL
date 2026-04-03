@@ -1,6 +1,6 @@
 [project]
 name = "autoUFL"
-version = "0.1.1"
+version = "0.2.0"
 description = "Batch Excel-to-CSV normalization utility for UFL uploads"
 readme = "README.md"
 requires-python = ">=3.13"
