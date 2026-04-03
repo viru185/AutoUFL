@@ -44,33 +44,35 @@ jobs:
         run: uv run python build.py
 
       - name: Prepare release table
-        shell: pwsh
+        shell: bash
         env:
           TAG_NAME: ${{ needs.release.outputs.tag_name }}
-          REPOSITORY: ${{ github.repository }}
         run: |
-          $files = Get-ChildItem "dist" -Filter "*.exe"
-          if (-not $files) {
-            throw "No executables found in dist/"
-          }
+          set -euo pipefail
 
-          $rows = @("| Client | Download |", "| --- | --- |")
-          foreach ($file in $files) {
-            $client = $file.BaseName -replace '^autoUFL_', ''
-            $url = "https://github.com/$env:REPOSITORY/releases/download/$env:TAG_NAME/$($file.Name)"
-            $rows += "| $client | [$($file.Name)]($url) |"
-          }
+          shopt -s nullglob
+          files=(dist/*.exe)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No executables found in dist/" >&2
+            exit 1
+          fi
 
-          $table = ($rows -join "`n").Trim()
-          $tableBody = @(
-            "## Downloadable Installers",
-            "",
-            $table
-          ) -join "`n"
+          mkdir -p build
+          output="build/release-table.md"
 
-          $tablePath = Join-Path (Get-Location) "build/release-table.md"
-          New-Item -ItemType Directory -Force -Path (Split-Path $tablePath) | Out-Null
-          $tableBody | Out-File -FilePath $tablePath -Encoding utf8
+          {
+            echo "## Downloadable Installers"
+            echo
+            echo "| Client | Download |"
+            echo "| --- | --- |"
+            for path in "${files[@]}"; do
+              file_name="$(basename "$path")"
+              client="${file_name#autoUFL_}"
+              client="${client%.exe}"
+              url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG_NAME}/${file_name}"
+              echo "| ${client} | [${file_name}](${url}) |"
+            done
+          } > "${output}"
 
       - name: Upload installers to release
         uses: softprops/action-gh-release@v1
