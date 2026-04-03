@@ -2,9 +2,13 @@
 
 import os
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_submodules
 
-CLIENT = os.getenv("AUTO_UFL_CLIENT_ENV")
+CLIENT = os.getenv("AUTO_UFL_BUILD_TARGET", "all").lower()
+MANIFEST_FILE = Path("build") / "client_manifest.json"
+
+if not MANIFEST_FILE.exists():
+    raise SystemExit("Missing build/client_manifest.json. Run build.py before invoking PyInstaller.")
+
 
 def collect_client_modules():
     base = Path("src/clients")
@@ -13,22 +17,29 @@ def collect_client_modules():
     for client_dir in base.iterdir():
         if client_dir.is_dir() and not client_dir.name.startswith("__"):
             modules.append(f"src.clients.{client_dir.name}.processor")
-    return modules
 
+    return sorted(modules)
+
+
+all_client_modules = collect_client_modules()
 
 if CLIENT == "all":
-    hiddenimports = collect_client_modules()
+    hiddenimports = all_client_modules
 else:
-    hiddenimports = [
-    f"src.clients.{CLIENT}.processor",
-    ]
+    target_module = f"src.clients.{CLIENT}.processor"
+    if target_module not in all_client_modules:
+        raise SystemExit(f"Client '{CLIENT}' does not exist or lacks a processor.py")
+    hiddenimports = [target_module]
 
 
 a = Analysis(
     ['main.py'],
     pathex=[os.getcwd()],
     binaries=[],
-    datas=[('pyproject.toml', '.')],
+    datas=[
+        ('pyproject.toml', '.'),
+        (str(MANIFEST_FILE), 'src'),
+    ],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
