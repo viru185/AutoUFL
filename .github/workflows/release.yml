@@ -38,13 +38,40 @@ jobs:
         run: pip install uv
 
       - name: Sync dependencies
-        run:  uv sync --all-extras --all-groups
+        run: uv sync --all-extras --all-groups
 
-      - name: Build exe
-        run: uv run pyinstaller autoUFL.spec --clean
+      - name: Build installers
+        run: uv run python build.py
 
-      - name: Upload exe to release
+      - name: Prepare release table
+        shell: pwsh
+        env:
+          TAG_NAME: ${{ needs.release.outputs.tag_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          $files = Get-ChildItem "dist" -Filter "*.exe"
+          if (-not $files) {
+            throw "No executables found in dist/"
+          }
+
+          $rows = @("| Client | Download |", "| --- | --- |")
+          foreach ($file in $files) {
+            $client = $file.BaseName -replace '^autoUFL_', ''
+            $url = "https://github.com/$env:REPOSITORY/releases/download/$env:TAG_NAME/$($file.Name)"
+            $rows += "| $client | [$($file.Name)]($url) |"
+          }
+
+          $table = ($rows -join "`n").Trim()
+          Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_TABLE<<EOF"
+          Add-Content -Path $env:GITHUB_ENV -Value $table
+          Add-Content -Path $env:GITHUB_ENV -Value "EOF"
+
+      - name: Upload installers to release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/AutoUFL.exe
+          files: dist/*.exe
           tag_name: ${{ needs.release.outputs.tag_name }}
+          append_body: true
+          body: |
+            ## Downloadable Installers
+            ${{ env.RELEASE_TABLE }}
