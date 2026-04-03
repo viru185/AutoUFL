@@ -62,9 +62,15 @@ jobs:
           }
 
           $table = ($rows -join "`n").Trim()
-          Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_TABLE<<EOF"
-          Add-Content -Path $env:GITHUB_ENV -Value $table
-          Add-Content -Path $env:GITHUB_ENV -Value "EOF"
+          $tableBody = @(
+            "## Downloadable Installers",
+            "",
+            $table
+          ) -join "`n"
+
+          $tablePath = Join-Path (Get-Location) "build/release-table.md"
+          New-Item -ItemType Directory -Force -Path (Split-Path $tablePath) | Out-Null
+          $tableBody | Out-File -FilePath $tablePath -Encoding utf8
 
       - name: Upload installers to release
         uses: softprops/action-gh-release@v1
@@ -72,6 +78,4 @@ jobs:
           files: dist/*.exe
           tag_name: ${{ needs.release.outputs.tag_name }}
           append_body: true
-          body: |
-            ## Downloadable Installers
-            ${{ env.RELEASE_TABLE }}
+          body_path: build/release-table.md
