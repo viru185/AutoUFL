@@ -32,7 +32,6 @@ jobs:
         run: uv run python build.py
 
       - name: Prepare release body
-        id: release_body
         shell: pwsh
         env:
           TAG_NAME: v0.0.0-dev-test
@@ -57,14 +56,14 @@ jobs:
           )
 
           $body = ($bodyLines -join "`n").Trim()
-          Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_BODY<<EOF"
-          Add-Content -Path $env:GITHUB_ENV -Value $body
-          Add-Content -Path $env:GITHUB_ENV -Value "EOF"
+          $bodyPath = Join-Path (Get-Location) "build/test-release-body.md"
+          New-Item -ItemType Directory -Force -Path (Split-Path $bodyPath) | Out-Null
+          $body | Out-File -FilePath $bodyPath -Encoding utf8
 
       - name: Upload installers to test release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*.exe
           tag_name: v0.0.0-dev-test
-          body: ${{ env.RELEASE_BODY }}
+          body_path: build/test-release-body.md
           prerelease: true
