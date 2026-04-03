@@ -11,7 +11,9 @@ client_name = os.getenv("AUTO_UFL_CLIENT_ENV", "none").lower()
 if client_name == "none":
     logger.error("No client found in the environment variable")
     sys.exit(1)
-
+elif client_name == "all":
+    logger.info("Loading all clients for all in executable build.")
+    client_name = "utkal"
 else:
     logger.info(f"{client_name} is found in environment variable")
 

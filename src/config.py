@@ -7,12 +7,20 @@ Values can be overridden via environment variables to keep the code flexible.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+
+def get_base_path() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent
+    return Path(__file__).resolve().parents[1]
+
+
 # Root folder of the repository; handy for building other default paths.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = get_base_path()
 
 # Load .env ahead of reading os.getenv values.
 load_dotenv(PROJECT_ROOT / ".env")
@@ -21,7 +29,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
 LOG_TO_CONSOLE = bool(os.getenv("AUTO_UFL_LOG_CONSOLE", False))
 LOG_PATH = Path(os.getenv("AUTO_UFL_LOG_PATH", PROJECT_ROOT / "autoUFL.log"))
-LOG_PATH.parent.mkdir(parents=True,exist_ok=True)
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # default dir of file input and output creating on script.
 DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "Client Input")).resolve()

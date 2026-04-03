@@ -103,7 +103,7 @@ class ExcelEventHandler(FileSystemEventHandler):
             and path.suffix.lower() in SUPPORTED_EXTENSIONS
         )
 
-    def _rename(self, path: Path, suffix: str):
+    def _rename(self, path: Path, suffix: str) -> None:
         base = path.stem
 
         if suffix == ARCHIVE_SUFFIX_SUCCESS:
