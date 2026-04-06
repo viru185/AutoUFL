@@ -1,95 +1,129 @@
-
 # AutoUFL
 
-AutoUFL is a Windows-friendly Typer CLI that watches, normalizes, and exports structured Excel workbooks into CSV files that PI/AVEVA's UFL interface can ingest. It ships with opinionated defaults, full logging, and a release pipeline so you can double-click a packaged `.exe` or keep it running in watch mode.
+AutoUFL watches a drop folder for Excel workbooks, normalizes them with client-specific rules, and emits PI/AVEVA UFL-ready CSV files. It is packaged as a Windows-friendly CLI so operators can keep it running beside the data source or bake it into a PyInstaller executable.
 
-## Features
-- Excel → CSV normalization with deterministic column mapping and PI tag resolution.
-- Batch/one-shot processing that renames completed files with timestamped `_done` suffixes.
-- Folder watcher built on `watchdog` that retries safely and prevents duplicate processing.
-- Rich logging to console and rotating files plus optional debug sink.
-- `.env`-driven configuration (sheet name, folder layout, timestamp tuning, logging).
-- Versioned CLI metadata (`--version`, `--author`) backed by a single source of truth (`pyproject.toml`).
-- PyInstaller build recipe with automated GitHub Releases via release-please.
+## Highlights
+- File watcher built on `watchdog` that processes existing and newly dropped files exactly once and renames/archives them with timestamped suffixes.
+- Pluggable client processors under `src/clients/*` so each customer gets bespoke cleaning, tag mapping, and export logic without touching the core watcher.
+- Structured logging via `loguru` with mirrored console + file sinks, rotation/retention controls, and enriched events for filesystem activity.
+- `.env`-driven configuration for directories, timestamps, watchdog tuning, and default client selection.
 
-## Installation
-The project uses [uv](https://github.com/astral-sh/uv) for dependency management.
+## Requirements & Setup
+1. Install [uv](https://github.com/astral-sh/uv) (or use an existing Python 3.13 environment; `.python-version` pins 3.13).
+2. Clone the repository and install dependencies:
+   ```powershell
+   uv sync --group dev
+   ```
+3. Copy `.env.example` to `.env` and update any values (see [Configuration](#configuration-env)).
 
-```
-# Clone the repo, then install dependencies
-uv sync --group dev
+## Running the Watcher
+AutoUFL exposes a single CLI entrypoint:
 
-# Run the CLI
-uv run python main.py --help
-```
-
-## Usage Examples
-```
-# Show current version (v1.0.0) sourced from pyproject
-uv run python main.py --version
-
-# Show author metadata
-uv run python main.py --author
-
-# Process a single workbook and delete it afterward
-uv run python main.py --file "C:\drops\ManualTagUpdateUtility.xlsm" --delete
-
-# Watch folders automatically (uses executable-relative Client Input/CSV UFL Input when --folder is omitted)
-uv run python main.py --auto
-
-# Watch a custom folder, write to a custom output folder
-uv run python main.py --auto --folder D:\incoming --output D:\normalized
+```powershell
+uv run python main.py            # start the watcher with the default client
+uv run python main.py --client utkal
+uv run python main.py --version  # prints version sourced from pyproject.toml
+uv run python main.py --author   # prints maintainer & contact info
 ```
 
-## Environment Configuration
-Create a `.env` (see `.env.example`) to override defaults:
+Behavior notes:
+- The watcher creates (if missing) `Client Input/` and `CSV UFL Input/` directories alongside the executable or repo root. Drop Excel files into `Client Input/`; CSV output lands in `CSV UFL Input/`.
+- Existing files are processed before the observer starts, so you can seed the folder and then launch the watcher.
+- Each processed file is either deleted (`delete_source=True` when instantiating `FolderWatcher`) or renamed using `_done`/`_error` plus an ISO timestamp. Errors stay nearby for inspection.
+- Stop the watcher with `Ctrl+C`. A friendly shutdown message is logged and the observer is closed cleanly.
 
-| Variable | Description |
-| --- | --- |
-| `AUTO_UFL_LOG_LEVEL` | `INFO`, `DEBUG`, etc.
-| `AUTO_UFL_LOG_CONSOLE` | `true/false` to mirror logs to stdout.
-| `AUTO_UFL_LOG_PATH` | Absolute path for persistent logs.
-| `AUTO_UFL_SHEET_NAME` | Worksheet tab to read (default `P&B`).
-| `AUTO_UFL_DEFAULT_TIMESTAMP` | Time-of-day (`HH:MM[:SS]` or `5:00 AM`) used when stamping `_done` filenames. Default is `05:00`.
-| `AUTO_UFL_INPUT_DIR` / `AUTO_UFL_OUTPUT_DIR` | Override the default `Client Input` / `CSV UFL Input` folders.
-| `AUTO_UFL_WATCH_INTERVAL` | Seconds between watchdog polling loops.
-| `AUTO_UFL_FILE_STABILIZE` | Seconds to wait for a file to stop growing before processing.
+## Logging & Diagnostics
+- Logging is centralized in `src/logger.py` and powered by `loguru`.
+- Console output is colorized and synchronized when `AUTO_UFL_LOG_CONSOLE=true`.
+- File logging defaults to `autoUFL.log` in the project root. Use `AUTO_UFL_LOG_PATH` to relocate it; rotation/retention are controlled via Loguru-friendly strings (for example `50 MB`, `1 week`, `10 files`).
+- Watcher events now surface why files are skipped, how long stabilization took, and whether processors returned zero rows—making it easier to spot upstream data issues without reproducing runs.
 
-When you double-click the packaged `.exe` (or run `--auto` without `--folder`), AutoUFL resolves the directories relative to the executable, loads `.env` from that same directory if present, and creates `Client Input` / `CSV UFL Input` automatically.
+## Configuration (.env)
+All runtime knobs live in `.env`. Every variable is optional; defaults appear in parentheses.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `AUTO_UFL_LOG_LEVEL` | `INFO` | Global log level passed to loguru sinks. |
+| `AUTO_UFL_LOG_CONSOLE` | `false` | Mirror logs to stdout; accepts `true/false/1/0/yes/no`. |
+| `AUTO_UFL_LOG_PATH` | `<project>/autoUFL.log` | Absolute path for the file sink; created automatically. |
+| `AUTO_UFL_LOG_ROTATION` | `5 MB` | Loguru rotation expression (`\"10 MB\"`, `\"1 week\"`, etc.). |
+| `AUTO_UFL_LOG_RETENTION` | `0` | Loguru retention expression. Use `0` to keep everything or e.g. `\"14 days\"`. |
+| `AUTO_UFL_DEFAULT_TIMESTAMP` | `05:00:00` | Time-of-day appended to normalized month starts when emitting CSV rows. |
+| `AUTO_UFL_INPUT_DIR` | `<project>/Client Input` | Override input drop folder. |
+| `AUTO_UFL_OUTPUT_DIR` | `<project>/CSV UFL Input` | Override output folder. |
+| `AUTO_UFL_WATCH_INTERVAL` | `1.0` | Seconds between watchdog polling loops. |
+| `AUTO_UFL_FILE_STABILIZE` | `1.0` | Seconds to wait between size checks before a file is considered stable. |
+| `AUTO_UFL_CLIENT_ENV` | *(first discovered client)* | Forces a default client when none is passed to `--client`. Helpful for packaged single-client builds. |
+
+> Tip: Changes require restarting the watcher. Keep `.env` beside the executable (PyInstaller build) or alongside the repo root for development.
+
+## Adding a New Client
+Client logic lives under `src/clients/<slug>/`. Adding another customer means supplying configuration plus an `ExcelProcessor` subclass. Follow these steps:
+
+1. **Create the package skeleton**
+   ```
+   src/clients/
+     └── myclient/
+         ├── __init__.py          # can stay empty
+         ├── client_config.py     # schemas, regexes, mappings
+         └── processor.py         # ExcelProcessor implementation
+   ```
+2. **Author `client_config.py`**
+   - Declare `SHEETS_TO_PROCESS` or `SHEETS_TO_PROCESS_REGEX` to target worksheets.
+   - Provide `COLUMNS_TO_DRIP_RE_EXPRESSION`, `COLUMN_RENAME_MAP`, and `TAG_MAPPING` dictionaries similar to the existing clients.
+3. **Implement `ExcelProcessor`**
+   - Subclass `baseExcelProcessor` from `src/clients/base_processor.py`.
+   - Override `process_file(self, file_path, output_dir)` and call the shared helpers (`_set_header`, `_drop_columns_by_regex`, `_map_description_to_tag`, `_prepare_ufl_csv_df`, `_save_ufl_csv`).
+   - Add any client-specific cleanup in `_clean_df`.
+   - Wrap the body in `try/except` exactly like the existing processors so watcher error handling stays consistent.
+4. **Test locally**
+   - Drop representative workbooks into `Client Input/`.
+   - Run `uv run python main.py --client myclient`.
+   - Inspect logs for warnings (missing tags, zero rows) and verify CSV output.
+5. **Set the default client (optional)**
+   - Add `AUTO_UFL_CLIENT_ENV=myclient` to `.env` so the watcher uses it automatically when `--client` is omitted.
+6. **Package for distribution**
+   - Run `uv run python build.py`. The script discovers every client directory, writes `build/client_manifest.json`, and produces per-client `.exe` files under `dist/` (plus an `all` build that contains every processor).
+   - Set `AUTO_UFL_BUILD_TARGET` before invoking PyInstaller (see `build.py`) if you need to build a single-client executable manually.
+
+Because discovery is dynamic, no registry edits are required—just ensure the `processor.py` file exports a class named `ExcelProcessor`.
 
 ## Project Structure
 ```
 AutoUFL/
-├── main.py                 # Typer CLI entrypoint
+├── main.py                 # argparse CLI entrypoint
 ├── src/
-│   ├── config.py           # Environment + constant management
-│   ├── logger.py           # Loguru configuration
-│   ├── meta.py             # Project metadata helpers (version, URLs)
-│   ├── processor.py        # Excel → CSV normalization logic
-│   ├── runtime.py          # Timestamp helpers sourced from .env
-│   └── watcher.py          # Watchdog observer & rename helpers
-├── Client Input/           # Auto-created when running without args
-├── CSV UFL Input/
+│   ├── config.py           # .env loading, path resolution, runtime constants
+│   ├── logger.py           # loguru configuration (console/file sinks)
+│   ├── meta.py             # version/author helpers sourced from pyproject
+│   ├── watcher.py          # watchdog observer + processing loop
+│   └── clients/
+│       ├── base_processor.py   # shared dataframe utilities + ProcessResult
+│       ├── registry.py         # dynamic client discovery/manifest loader
+│       └── <client>/           # client-specific processors & configs
+├── Client Input/           # default ingest location (auto-created)
+├── CSV UFL Input/          # default export target (auto-created)
+├── build.py                # PyInstaller helper that writes client manifests
+├── autoUFL.spec            # PyInstaller spec consumed by build.py
 ├── README.md
-├── pyproject.toml
-└── .github/workflows/
+└── pyproject.toml
 ```
 
 ## Building a Standalone `.exe`
-```
+```powershell
 uv sync --group dev
-uv run pyinstaller main.py --name AutoUFL --onefile --clean
-# Pick up dist/AutoUFL.exe and distribute it (ships with Client Input/CSV UFL Input defaults)
+uv run python build.py             # writes build/client_manifest.json
+# Dist executables live under dist/autoUFL_<client>.exe (plus autoUFL_all.exe)
 ```
 
 ## Release Workflow
-- Create or merge commits into `main` with meaningful messages (release-please uses them for changelog entries).
-- Tag a commit with `v*` (e.g., `git tag v1.0.0 && git push origin v1.0.0`).
-- The `release.yml` workflow triggers on the tag, runs `google-github-actions/release-please` to draft the release & changelog, builds a fresh PyInstaller `.exe` on Windows, and uploads the artifact to the GitHub Release page.
+- Merge meaningful commits into `main` (Release Please uses them to craft changelog entries).
+- Tag with `v*` (example: `git tag v1.0.0 && git push origin v1.0.0`), auto created with 
+- GitHub Actions picks up the tag, runs the Release Please workflow, builds a fresh PyInstaller artifact on Windows, and attaches it to the GitHub Release.
 
 ## Contribution Guidelines
-1. Fork the repo and create a feature branch.
-2. Run `uv run python -m compileall src main.py` plus any relevant tests before committing.
-3. Follow conventional commit messages so release-please can summarize changes automatically.
-4. Submit a pull request describing the change and any configuration updates.
-5. For large features, open an issue first to discuss scope/UX expectations.
+1. Create a feature branch from `main`.
+2. Run `uv run python -m compileall src main.py` (and any data-quality checks relevant to your client) before committing.
+3. Follow conventional commits so the automated changelog stays tidy.
+4. Open a PR that describes the change, configuration updates, and any new client assumptions or sample data needs.
+5. For sizeable enhancements, open an issue first to align on expectations.
