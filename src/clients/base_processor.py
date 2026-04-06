@@ -258,21 +258,24 @@ class baseExcelProcessor:
 
         return df.rename(columns=valid_map)
     
-    @staticmethod
-    def _save_ufl_csv(df: pd.DataFrame, output_file: Path) -> bool:
+    @classmethod
+    def _save_ufl_csv(cls,df: pd.DataFrame, file_path: Path, output_dir: Path) -> Path:
         """
         Save the DataFrame to a CSV file.
 
         args:
             df (pd.DataFrame): The DataFrame to be saved.
-            output_file (Path): The path where the CSV file will be saved.
+            file_path (Path): The path to the input file.
+            output_dir (Path): The path to the output directory.
 
         returns:
             bool: True if the file was saved successfully, False otherwise.
         """
         try:
-            df.to_csv(output_file, index=False, header=True, float_format='%.4f')
-            logger.info(f"file saved: {output_file}")
-            return True
+            _output_file = cls._get_output_file_path(file_path, output_dir)
+            df.to_csv(_output_file, index=False, header=True, float_format='%.4f')
+            logger.debug(f"file saved: {_output_file}")
+            return _output_file
         except:
-            return False
+            logger.exception(f"Error saving file: {file_path}")
+            return Path()
