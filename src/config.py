@@ -13,6 +13,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
+def _get_bool_env(name: str, default: bool = False) -> bool:
+    """Return a boolean env var with permissive parsing."""
+
+    value = os.getenv(name)
+    if value is None:
+        return default
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def get_base_path() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
@@ -27,7 +37,9 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 # Logging
 LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
-LOG_TO_CONSOLE = bool(os.getenv("AUTO_UFL_LOG_CONSOLE", False))
+LOG_TO_CONSOLE = _get_bool_env("AUTO_UFL_LOG_CONSOLE", False)
+LOG_ROTATION = os.getenv("AUTO_UFL_LOG_ROTATION", "5 MB")
+LOG_RETENTION = os.getenv("AUTO_UFL_LOG_RETENTION", "0")
 LOG_PATH = Path(os.getenv("AUTO_UFL_LOG_PATH", PROJECT_ROOT / "autoUFL.log"))
 LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
