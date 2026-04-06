@@ -35,9 +35,6 @@ class ExcelProcessor(baseExcelProcessor):
 
     def process_file(self, file_path: Path, output_dir: Path) -> ProcessResult:  # type: ignore
         try:
-            output_file_path = self._get_output_file_path(file_path, output_dir)
-            logger.info(f"output_file_path: {output_file_path}")
-
             # load the Excel file
             df = pd.read_excel(file_path, sheet_name="P&B", header=None)
 
@@ -60,7 +57,7 @@ class ExcelProcessor(baseExcelProcessor):
             # prepare the dataframe for UFL CSV format
             df = self._prepare_ufl_csv_df(df)
 
-            self._save_ufl_csv(df, output_file_path)
+            output_file_path = self._save_ufl_csv(df, file_path, output_dir)
 
             return ProcessResult(rows_written=df.shape[0], output_file=output_file_path)
 
