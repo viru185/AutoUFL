@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.0.0](https://github.com/viru185/AutoUFL/compare/v1.0.0...v2.0.0) (2026-04-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mahan:** implement ExcelProcessor for handling Excel files and generating normalized CSVs for `mahan` client
+* **mahan:** add client configuration for sheet processing and tag mapping
+* **mahan:** add initial implementation of the Mahan client
+
+### Features
+
+* **config:** add boolean env parser and logging configuration controls ([c418ad3](https://github.com/viru185/AutoUFL/commit/c418ad312d374fcaef832a901d2bc1b8abca24d4))
+* **logger:** add configurable logging formats with rotation and retention ([910fcf3](https://github.com/viru185/AutoUFL/commit/910fcf3986ad3aef2357ac64ddfb7812aa75794c))
+* **mahan:** add client configuration for sheet processing and tag mapping ([774ffe2](https://github.com/viru185/AutoUFL/commit/774ffe25c714755705fb033f1493b125976ed050))
+* **mahan:** add initial implementation of the Mahan client ([70d0910](https://github.com/viru185/AutoUFL/commit/70d0910358e6b1cefa0347689b911492cd14d832))
+* **mahan:** implement ExcelProcessor for handling Excel files and generating normalized CSVs for `mahan` client ([4d4251e](https://github.com/viru185/AutoUFL/commit/4d4251e76a3fb8289ada78ddec3fd7d7d0aecb19))
+* **watcher:** add detailed logging for file processing lifecycle ([05d0c29](https://github.com/viru185/AutoUFL/commit/05d0c298b893757308c5fe4313ec7f01f501ebf6))
+
+
+### Bug Fixes
+
+* **baseProcessor:** streamline DataFrame operations, fix column insert and improve readability, ([9e226e8](https://github.com/viru185/AutoUFL/commit/9e226e82afb77ccf13bb2fccb89c342b3b397ef6))
+* **config:** ensure LOG_RETENTION is parsed as an integer ([de01aa9](https://github.com/viru185/AutoUFL/commit/de01aa96b0a7f5deb7851bd3c1c1f1ab526e8e3d))
+* **processor:** correct output file path handling in process_file method ([df0b2e5](https://github.com/viru185/AutoUFL/commit/df0b2e5df9715669f5339e08af54cceade2e0099))
+* **processor:** update process_file method to correctly handle output file path and save UFL CSV ([8c7913d](https://github.com/viru185/AutoUFL/commit/8c7913d40d599bc10cb39cd4e036c5f0ea1020e4))
+
+
+### Documentation
+
+* **env:** provide complete environment variable template ([c7c8ed5](https://github.com/viru185/AutoUFL/commit/c7c8ed5ad352270c3632d7fc778ccea3cd6b3e7f))
+* **readme:** expand documentation with usage, config, and onboarding guide ([c7cedd4](https://github.com/viru185/AutoUFL/commit/c7cedd49329c3844b4ab8058d5d76eb38b056423))
+* **uv:** version change in file. ([0953ffd](https://github.com/viru185/AutoUFL/commit/0953ffd1d43ac4a4ea15f4b47a0a96ecd01f2998))
+
 ## [1.0.0](https://github.com/viru185/AutoUFL/compare/v0.2.0...v1.0.0) (2026-04-03)
 
 
