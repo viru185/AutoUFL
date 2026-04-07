@@ -68,7 +68,6 @@ class baseExcelProcessor:
         returns:
             pd.DataFrame: The DataFrame with the header set.
         """
-        from datetime import datetime
 
         # 1. Drop empty rows and reset index WITHOUT adding an 'index' column
         df = df.dropna(how="all").reset_index(drop=True)
@@ -89,7 +88,7 @@ class baseExcelProcessor:
                 df.columns.name = None
 
                 # 5. Add a 'Tag' column
-                df.insert(0, "Tag", None)
+                df["Tag"] = df.get("Tag", None)
 
                 return df.reset_index(drop=True)
 
@@ -152,12 +151,7 @@ class baseExcelProcessor:
                 df[col] = None
 
         # Clean Description
-        df["Description"] = (
-            df["Description"]
-            .astype("string")
-            .str.replace(",", "", regex=False)
-            .str.strip()
-        )
+        df["Description"] = df["Description"].astype("string").str.replace(",", "", regex=False).str.strip()
 
         id_vars = ["Tag", "Description", "UOM"]
         month_cols = [c for c in df.columns if c not in id_vars]
@@ -257,9 +251,9 @@ class baseExcelProcessor:
         valid_map = {k: v for k, v in column_map.items() if k in df.columns}
 
         return df.rename(columns=valid_map)
-    
+
     @classmethod
-    def _save_ufl_csv(cls,df: pd.DataFrame, file_path: Path, output_dir: Path) -> Path:
+    def _save_ufl_csv(cls, df: pd.DataFrame, file_path: Path, output_dir: Path) -> Path:
         """
         Save the DataFrame to a CSV file.
 
@@ -273,7 +267,7 @@ class baseExcelProcessor:
         """
         try:
             _output_file = cls._get_output_file_path(file_path, output_dir)
-            df.to_csv(_output_file, index=False, header=True, float_format='%.4f')
+            df.to_csv(_output_file, index=False, header=True, float_format="%.4f")
             logger.debug(f"file saved: {_output_file}")
             return _output_file
         except:
