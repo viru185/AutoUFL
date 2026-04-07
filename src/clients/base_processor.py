@@ -249,8 +249,37 @@ class baseExcelProcessor:
 
         # Only rename columns that actually exist in df
         valid_map = {k: v for k, v in column_map.items() if k in df.columns}
+        logger.debug(f"Renaming columns: {valid_map}")
 
         return df.rename(columns=valid_map)
+
+    @staticmethod
+    def _get_sheet_name(file_path: Path, sheets_to_process_regex: list[str]):
+        """
+        Get sheet names from an Excel file with regex matching.
+
+        args:
+            file_path (Path): The path to the Excel file.
+            sheets_to_process_regex (list[str]): A list of regex patterns to match sheet names.
+
+        returns:
+            list[str]: A list of matching sheet names.
+        """
+        try:
+            excel = pd.ExcelFile(file_path)
+            sheet_names = [str(s) for s in excel.sheet_names]
+
+            # Compile all patterns
+            patterns = [re.compile(p, re.IGNORECASE) for p in sheets_to_process_regex]
+
+            # Match if ANY pattern matches
+            matched_sheets = [sheet for sheet in sheet_names if any(p.match(sheet) for p in patterns)]
+
+            return matched_sheets
+
+        except Exception as e:
+            logger.error(f"Failed to get sheet names from {file_path}: {e}")
+            return []
 
     @classmethod
     def _save_ufl_csv(cls, df: pd.DataFrame, file_path: Path, output_dir: Path) -> Path:
