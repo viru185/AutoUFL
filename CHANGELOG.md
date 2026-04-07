@@ -1,5 +1,26 @@
 # Changelog
 
+## [3.0.0](https://github.com/viru185/AutoUFL/compare/v2.0.0...v3.0.0) (2026-04-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **muri:** implement ExcelProcessor for handling Excel files and converting month names to dates
+* **muri:** add client configuration for sheet processing and tag mapping
+* **muri:** add initial __init__.py file for the muri client
+
+### Features
+
+* **base_processor:** add method to retrieve sheet names from Excel files using regex matching ([faf6f05](https://github.com/viru185/AutoUFL/commit/faf6f0568bf4c0cae68d195aecbe3448067d40fa))
+* **muri:** add client configuration for sheet processing and tag mapping ([445419b](https://github.com/viru185/AutoUFL/commit/445419b17a9140c1bbac45fa179240c8e27dec3c))
+* **muri:** add initial __init__.py file for the muri client ([d06749a](https://github.com/viru185/AutoUFL/commit/d06749ad01ef6ad3c77ec9667fc2fc529d65de9f))
+* **muri:** implement ExcelProcessor for handling Excel files and converting month names to dates ([69ee17c](https://github.com/viru185/AutoUFL/commit/69ee17c7287d91b8692158b5263f20b38b5fba4e))
+
+
+### Bug Fixes
+
+* rename COLUMNS_TO_DRIP_RE_EXPRESSION to COLUMNS_TO_DROP_RE_EXPRESSION in client configurations and processors ([2958b29](https://github.com/viru185/AutoUFL/commit/2958b294b98f0dd0f8b67f79db1284004664287d))
+
 ## [2.0.0](https://github.com/viru185/AutoUFL/compare/v1.0.0...v2.0.0) (2026-04-07)
 
 
