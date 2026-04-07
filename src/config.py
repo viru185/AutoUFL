@@ -39,7 +39,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 LOG_LEVEL = os.getenv("AUTO_UFL_LOG_LEVEL", "INFO")
 LOG_TO_CONSOLE = _get_bool_env("AUTO_UFL_LOG_CONSOLE", False)
 LOG_ROTATION = os.getenv("AUTO_UFL_LOG_ROTATION", "5 MB")
-LOG_RETENTION = os.getenv("AUTO_UFL_LOG_RETENTION", "0")
+LOG_RETENTION = int(os.getenv("AUTO_UFL_LOG_RETENTION", 0))
 LOG_PATH = Path(os.getenv("AUTO_UFL_LOG_PATH", PROJECT_ROOT / "autoUFL.log"))
 LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
