@@ -1,7 +1,7 @@
 SHEETS_TO_PROCESS: list[str] = ["P&B"]
 
 # ignore columns with this regular expression
-COLUMNS_TO_DRIP_RE_EXPRESSION: list[str] = [r"(?i)FY\d{2}"]
+COLUMNS_TO_DROP_RE_EXPRESSION: list[str] = [r"(?i)FY\d{2}"]
 
 
 # Mapping between metric descriptions and PI tags.

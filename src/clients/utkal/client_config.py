@@ -5,7 +5,7 @@ SHEETS_TO_PROCESS: list[str] = []
 SHEETS_TO_PROCESS_REGEX: list[str] = []
 
 # ignore columns with this regular expression
-COLUMNS_TO_DRIP_RE_EXPRESSION: list[str] = [r"^Sl\.No\.$", r"^P&B FY \d{2}$"]
+COLUMNS_TO_DROP_RE_EXPRESSION: list[str] = [r"^Sl\.No\.$", r"^P&B FY \d{2}$"]
 
 # columns to rename
 COLUMN_RENAME_MAP: dict[str, str] = {"KPI": "Description"}

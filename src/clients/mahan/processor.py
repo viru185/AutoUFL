@@ -5,7 +5,7 @@ import pandas as pd
 from src.clients.base_processor import ProcessResult, baseExcelProcessor
 from src.logger import logger
 
-from .client_config import COLUMNS_TO_DRIP_RE_EXPRESSION, SHEETS_TO_PROCESS, TAG_MAPPING
+from .client_config import COLUMNS_TO_DROP_RE_EXPRESSION, SHEETS_TO_PROCESS, TAG_MAPPING
 
 
 class ExcelProcessor(baseExcelProcessor):
@@ -42,7 +42,7 @@ class ExcelProcessor(baseExcelProcessor):
             df = self._set_header(df)
 
             # drop columns by regex
-            df = self._drop_columns_by_regex(df, COLUMNS_TO_DRIP_RE_EXPRESSION)
+            df = self._drop_columns_by_regex(df, COLUMNS_TO_DROP_RE_EXPRESSION)
 
             # # map description to tag
             # df = self._map_description_to_tag(df, self.tag_mapping)

@@ -5,7 +5,7 @@ import pandas as pd
 from src.clients.base_processor import ProcessingError, ProcessResult, baseExcelProcessor
 from src.logger import logger
 
-from .client_config import COLUMNS_TO_DRIP_RE_EXPRESSION, SHEETS_TO_PROCESS, TAG_MAPPING, COLUMN_RENAME_MAP
+from .client_config import COLUMN_RENAME_MAP, COLUMNS_TO_DROP_RE_EXPRESSION, SHEETS_TO_PROCESS, TAG_MAPPING
 
 
 class ExcelProcessor(baseExcelProcessor):
@@ -23,7 +23,7 @@ class ExcelProcessor(baseExcelProcessor):
     def _clean_df(df: pd.DataFrame) -> pd.DataFrame:
         """
         Client specific cleaning
-        
+
         args:
             df (pd.DataFrame): The DataFrame to clean
 
@@ -42,7 +42,7 @@ class ExcelProcessor(baseExcelProcessor):
             df = self._set_header(df)
 
             # drop columns by regex
-            df = self._drop_columns_by_regex(df, COLUMNS_TO_DRIP_RE_EXPRESSION)
+            df = self._drop_columns_by_regex(df, COLUMNS_TO_DROP_RE_EXPRESSION)
 
             # rename columns
             df = self._rename_columns(df, COLUMN_RENAME_MAP)
@@ -55,7 +55,7 @@ class ExcelProcessor(baseExcelProcessor):
 
             # Only drops rows where the 'Tag' column is None
             logger.info(f"Dropping rows where the 'Tag' column is None, count: {df['Tag'].isnull().sum()}")
-            df = df.dropna(subset=['Tag'])
+            df = df.dropna(subset=["Tag"])
 
             # prepare the dataframe for UFL CSV format
             df = self._prepare_ufl_csv_df(df)
