@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.0.1](https://github.com/viru185/AutoUFL/compare/v3.0.0...v3.0.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* **client_config:** client config is update, new tags added. ([5f3ba0b](https://github.com/viru185/AutoUFL/commit/5f3ba0bf93350a05bef468a2c1cf70aba6ecdc64))
+
+
+### Documentation
+
+* **baseExcelProcessor:** update docstrings for mapping and file path methods ([7dc9516](https://github.com/viru185/AutoUFL/commit/7dc951655867f608c9944c490b8a9deffba20ea0))
+* **uv:** Version bump in uv file. ([cf772cc](https://github.com/viru185/AutoUFL/commit/cf772ccd72e2370fa128d2e487a39a8ad4c0b3be))
+
 ## [3.0.0](https://github.com/viru185/AutoUFL/compare/v2.0.0...v3.0.0) (2026-04-07)
 
 
