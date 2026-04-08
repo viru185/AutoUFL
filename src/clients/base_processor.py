@@ -96,6 +96,13 @@ class baseExcelProcessor:
         """
         Maps values from 'Description' column to 'Tag' column using a dictionary.
         Handles extra spaces in Description.
+
+        args:
+            df (pd.DataFrame): The DataFrame to map.
+            mapping (dict): The mapping dictionary.
+
+        returns:
+            pd.DataFrame: The DataFrame with mapped values.
         """
 
         if "Description" not in df.columns:
@@ -207,6 +214,13 @@ class baseExcelProcessor:
         """
         Generate a unique CSV file path.
         Always ensures .csv extension.
+
+        args:
+            file_path (Path): The path to the input file.
+            output_dir (Path): The path to the output directory.
+
+        returns:
+            Path: The unique CSV file path.
         """
 
         # Force .csv extension FIRST
@@ -229,7 +243,7 @@ class baseExcelProcessor:
             counter += 1
 
     @staticmethod
-    def _rename_columns(df, column_map: dict):
+    def _rename_columns(df: pd.DataFrame, column_map: dict):
         """
         Rename dataframe columns using a mapping dictionary.
 
