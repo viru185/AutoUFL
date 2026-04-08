@@ -69,7 +69,7 @@ class baseExcelProcessor:
             pd.DataFrame: The DataFrame with the header set.
         """
 
-        # 1. Drop empty rows and reset index WITHOUT adding an 'index' column
+        # Drop empty rows and reset index WITHOUT adding an 'index' column
         df = df.dropna(how="all").reset_index(drop=True)
 
         for index, row in df.iterrows():
@@ -77,18 +77,15 @@ class baseExcelProcessor:
             datetime_count = sum(isinstance(val, (pd.Timestamp, datetime)) for val in row)
 
             if datetime_count > threshold:
-                # 2. Set the current row as the new header
+                # Set the current row as the new header
                 # row.values ensures we aren't carrying over any Series metadata
                 df.columns = row.values
 
-                # 3. Slice from the NEXT row to the end
+                # Slice from the NEXT row to the end
                 df = df.iloc[index + 1 :].copy()
 
-                # 4. Clean up formatting
+                # Clean up formatting
                 df.columns.name = None
-
-                # 5. Add a 'Tag' column
-                df["Tag"] = df.get("Tag", None)
 
                 return df.reset_index(drop=True)
 
@@ -104,9 +101,8 @@ class baseExcelProcessor:
         if "Description" not in df.columns:
             raise ValueError("Column 'Description' not found in DataFrame")
 
-        # Ensure Tag column exists
-        if "Tag" not in df.columns:
-            df["Tag"] = None
+        # Ensure 'Tag' column exists
+        df["Tag"] = df.get("Tag", None)
 
         # Clean Description (remove leading/trailing spaces)
         df["Description"] = df["Description"].astype(str).str.strip()
