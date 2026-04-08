@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.clients.base_processor import ProcessingError, ProcessResult, baseExcelProcessor
+from src.clients.base_processor import ProcessResult, baseExcelProcessor
 from src.logger import logger
 
 from .client_config import COLUMN_RENAME_MAP, COLUMNS_TO_DROP_RE_EXPRESSION, SHEETS_TO_PROCESS, TAG_MAPPING
