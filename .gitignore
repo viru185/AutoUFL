@@ -14,6 +14,9 @@ data/
 Client Input
 CSV UFL Input
 
+#ignore tag json file
+*.json
+
 # ignore env file
 .env
 
