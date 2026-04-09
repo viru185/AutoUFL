@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.1](https://github.com/viru185/AutoUFL/compare/v3.1.0...v3.1.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* **processor:** description to tag mapping added ([a99eb25](https://github.com/viru185/AutoUFL/commit/a99eb2546757d8c864d7bdcc97729848ba79d6fd))
+
 ## [3.1.0](https://github.com/viru185/AutoUFL/compare/v3.0.1...v3.1.0) (2026-04-09)
 
 
