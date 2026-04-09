@@ -1,13 +1,11 @@
-
 from __future__ import annotations
 
 import importlib
 import json
 import os
 import pkgutil
-from importlib import util
 from dataclasses import dataclass
-from importlib import resources
+from importlib import resources, util
 from pathlib import Path
 from typing import Type
 
