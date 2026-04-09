@@ -43,6 +43,9 @@ LOG_RETENTION = int(os.getenv("AUTO_UFL_LOG_RETENTION", 0))
 LOG_PATH = Path(os.getenv("AUTO_UFL_LOG_PATH", PROJECT_ROOT / "autoUFL.log"))
 LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+# Tags file location
+TAG_FILE = Path(os.getenv("AUTO_UFL_TAG_FILE", PROJECT_ROOT / "tags.json")).resolve()
+
 # default dir of file input and output creating on script.
 DEFAULT_INPUT_FOLDER = Path(os.getenv("AUTO_UFL_INPUT_DIR", PROJECT_ROOT / "Client Input")).resolve()
 DEFAULT_INPUT_FOLDER.mkdir(exist_ok=True)
