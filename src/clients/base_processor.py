@@ -1,3 +1,4 @@
+import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -5,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import DEFAULT_TIMESTAMP
+from src.config import DEFAULT_TIMESTAMP, TAG_FILE
 from src.logger import logger
 
 
@@ -92,30 +93,64 @@ class baseExcelProcessor:
         raise ProcessingError("No valid month header found")
 
     @staticmethod
-    def _map_description_to_tag(df: pd.DataFrame, mapping: dict) -> pd.DataFrame:
+    def _map_description_to_tag(df: pd.DataFrame, mapping: dict, tag_file: Path = TAG_FILE) -> pd.DataFrame:
         """
-        Maps values from 'Description' column to 'Tag' column using a dictionary.
-        Handles extra spaces in Description.
+        Maps values from 'Description' to 'Tag' using a dictionary + JSON file.
+
+        - Loads mapping from JSON file (if exists and readable)
+        - File mapping takes priority over provided mapping
+        - New mappings are added to file mapping
+        - Updates JSON file with latest mapping
 
         args:
-            df (pd.DataFrame): The DataFrame to map.
-            mapping (dict): The mapping dictionary.
+            df (pd.DataFrame): Input DataFrame
+            mapping (dict): New mapping dictionary
+            tag_file (Path): Path to JSON mapping file
 
         returns:
-            pd.DataFrame: The DataFrame with mapped values.
+            pd.DataFrame: Updated DataFrame
         """
 
         if "Description" not in df.columns:
             raise ValueError("Column 'Description' not found in DataFrame")
 
-        # Ensure 'Tag' column exists
+        # Ensure Tag column exists
         df["Tag"] = df.get("Tag", None)
 
-        # Clean Description (remove leading/trailing spaces)
+        # Clean Description
         df["Description"] = df["Description"].astype(str).str.strip()
 
+        file_mapping = {}
+
+        # Load JSON file safely
+        if tag_file.exists() and tag_file.is_file():
+            try:
+                with open(tag_file, "r", encoding="utf-8") as f:
+                    file_mapping = json.load(f)
+            except Exception:
+                logger.error(f"Error loading JSON file: {tag_file}")
+                file_mapping = {}
+
+        # Merge mappings
+        # Priority: file_mapping > mapping
+        merged_mapping = mapping.copy()
+
+        # overwrite with file mapping (file wins)
+        merged_mapping.update(file_mapping)
+
+        # add new keys from mapping into file_mapping (for persistence)
+        file_mapping.update(mapping)
+
         # Apply mapping
-        df["Tag"] = df["Description"].map(mapping).fillna(df["Tag"])
+        df["Tag"] = df["Description"].map(merged_mapping).fillna(df["Tag"])
+
+        # Save updated mapping back to file
+        try:
+            tag_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(tag_file, "w", encoding="utf-8") as f:
+                json.dump(file_mapping, f, indent=4, ensure_ascii=False)
+        except Exception:
+            logger.exception(f"Error saving JSON file: {tag_file}")
 
         return df
 
@@ -199,7 +234,7 @@ class baseExcelProcessor:
             out = pd.concat([out, march_rows], ignore_index=True)
 
         # Format DateTime exactly for CSV output
-        out["DateTime"] = pd.to_datetime(out["DateTime"]).dt.strftime("%Y-%m-%d %H:%M:%S")
+        out["DateTime"] = pd.to_datetime(out["DateTime"]).dt.strftime("%Y-%m-%dT%H:%M:%S")
 
         # Final output layout
         out = out[["Tag", "DateTime", "Description", "Value", "UOM"]]
