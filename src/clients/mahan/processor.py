@@ -44,8 +44,8 @@ class ExcelProcessor(baseExcelProcessor):
             # drop columns by regex
             df = self._drop_columns_by_regex(df, COLUMNS_TO_DROP_RE_EXPRESSION)
 
-            # # map description to tag
-            # df = self._map_description_to_tag(df, self.tag_mapping)
+            # map description to tag
+            df = self._map_description_to_tag(df, self.tag_mapping)
 
             # clean the dataframe
             # df = self._clean_df(df)
