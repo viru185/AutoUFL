@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.0](https://github.com/viru185/AutoUFL/compare/v3.0.1...v3.1.0) (2026-04-09)
+
+
+### Features
+
+* **base_processor:** add JSON-backed tag mapping with logging ([bc6410e](https://github.com/viru185/AutoUFL/commit/bc6410e68ddbd5ada40c7314fcdccddefa9c919b))
+* **config:** tag file location added for loading external tag. ([356c529](https://github.com/viru185/AutoUFL/commit/356c52972f8ae55aede7489e5c4f7f10bf06d34e))
+* **main:** add cli flag to run only once. ([5c7ec8a](https://github.com/viru185/AutoUFL/commit/5c7ec8a8b2956321f642786887faf8faabb2eea9))
+* **watcher:** add feature to run only once. ([c345b3b](https://github.com/viru185/AutoUFL/commit/c345b3bdfa094fdf2277eed6a0b6dd33c96f52b8))
+
 ## [3.0.1](https://github.com/viru185/AutoUFL/compare/v3.0.0...v3.0.1) (2026-04-08)
 
 
