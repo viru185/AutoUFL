@@ -140,11 +140,19 @@ class ExcelEventHandler(FileSystemEventHandler):
 
 
 class FolderWatcher:
-    def __init__(self, folder: Path, output_dir: Path, processor, delete_source=False):
+    def __init__(
+        self,
+        folder: Path,
+        output_dir: Path,
+        processor,
+        delete_source: bool = False,
+        run_once: bool = False,
+    ):
         self.folder = folder
         self.output_dir = output_dir
         self.processor = processor
         self.delete_source = delete_source
+        self.run_once = run_once
 
     def start(self) -> None:
         self.folder.mkdir(parents=True, exist_ok=True)
@@ -156,9 +164,18 @@ class FolderWatcher:
             self.delete_source,
         )
 
-        # Process existing files first
-        handler.process_existing_files(self.folder)
+        logger.info(f"Starting watcher | run_once={self.run_once} | " f"input={self.folder} | output={self.output_dir}")
 
+        # Always process existing files first
+        handler.process_existing_files(self.folder)
+        logger.info("Processed existing files")
+
+        # If run_once → exit immediately after processing
+        if self.run_once:
+            logger.info("Run-once mode enabled. Exiting after initial processing.")
+            return
+
+        # Otherwise start watching
         observer = Observer()
         observer.schedule(handler, str(self.folder), recursive=False)
         observer.start()
@@ -172,7 +189,7 @@ class FolderWatcher:
             while True:
                 time.sleep(WATCH_POLLING_INTERVAL)
         except KeyboardInterrupt:
-            logger.info(f"Stopping watcher...")
+            logger.info("Stopping watcher...")
         finally:
             observer.stop()
             observer.join()
