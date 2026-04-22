@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.2](https://github.com/viru185/AutoUFL/compare/v3.1.1...v3.1.2) (2026-04-10)
+
+
+### Documentation
+
+* **readme:** docs updated to include the new cli flag and updated with more instruction. ([4286564](https://github.com/viru185/AutoUFL/commit/4286564b59927e5e5d45f30e5dc1f2eab87361f8))
+* **uv:** version bump in uv. ([e425d84](https://github.com/viru185/AutoUFL/commit/e425d842fa000e760c5bd1669b34663ff80b04ad))
+
 ## [3.1.1](https://github.com/viru185/AutoUFL/compare/v3.1.0...v3.1.1) (2026-04-09)
 
 
